@@ -1,0 +1,116 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&display=swap">
+  <style>
+    body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+    h1, h2, .head { font-family: "Manrope", system-ui, sans-serif; }
+    .navrow { display:flex; align-items:center; gap:11px; padding:10px 16px; border-radius:9px; }
+    .stat { flex:1; background:#FFFFFF; border:1px solid #ECE7DC; border-radius:14px; padding:16px 18px; display:flex; flex-direction:column; gap:6px; }
+    .row { display:flex; align-items:center; gap:14px; padding:12px 6px; border-bottom:1px solid #F1EEE6; }
+    .th { font-size:11px; font-weight:700; color:#9A9A9A; text-transform:uppercase; letter-spacing:0.03em; }
+    .pill { padding:3px 9px; border-radius:7px; font-size:10.5px; font-weight:700; }
+  </style>
+</helmet>
+<div style="width:1160px; height:760px; background:#FBFAF7; display:flex; overflow:hidden;">
+
+  <div style="width:220px; flex-shrink:0; background:#F8EDEB; display:flex; flex-direction:column; padding:22px 14px;">
+    <div style="display:flex; align-items:center; gap:9px; padding:0 8px 24px;">
+      <div style="width:28px; height:28px; border-radius:8px; background:linear-gradient(135deg,#6B3F3A,#A66A5D); display:flex; align-items:center; justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><ellipse cx="12" cy="6.6" rx="2.5" ry="4.3" fill="#FFFFFF" opacity="0.95"/><ellipse cx="12" cy="6.6" rx="2.5" ry="4.3" fill="#FFFFFF" opacity="0.95" transform="rotate(60 12 12)"/><ellipse cx="12" cy="6.6" rx="2.5" ry="4.3" fill="#FFFFFF" opacity="0.95" transform="rotate(120 12 12)"/><ellipse cx="12" cy="6.6" rx="2.5" ry="4.3" fill="#FFFFFF" opacity="0.95" transform="rotate(180 12 12)"/><ellipse cx="12" cy="6.6" rx="2.5" ry="4.3" fill="#FFFFFF" opacity="0.95" transform="rotate(240 12 12)"/><ellipse cx="12" cy="6.6" rx="2.5" ry="4.3" fill="#FFFFFF" opacity="0.95" transform="rotate(300 12 12)"/><circle cx="12" cy="12" r="2.4" fill="#FEC89A"/></svg></div>
+      <div style="display:flex; flex-direction:column;">
+        <span class="head" style="font-size:13px; font-weight:800; color:#6B3F3A;">Appointex</span>
+        <span style="font-size:9.5px; color:#A66A5D; font-weight:700; letter-spacing:0.05em;">FOR BUSINESS</span>
+      </div>
+    </div>
+    <div class="navrow">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#C9A79D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg>
+      <span style="font-size:13px; font-weight:600; color:#C9A79D;">Dashboard</span>
+    </div>
+    <div class="navrow">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#C9A79D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>
+      <span style="font-size:13px; font-weight:600; color:#C9A79D;">Calendar</span>
+    </div>
+    <div class="navrow">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#C9A79D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+      <span style="font-size:13px; font-weight:600; color:#C9A79D;">Clients</span>
+    </div>
+    <div class="navrow" style="background:#FFB5A7;">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#6B3F3A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/><circle cx="16" cy="14" r="1"/></svg>
+      <span style="font-size:13px; font-weight:700; color:#6B3F3A;">Earnings</span>
+    </div>
+    <div class="navrow">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#C9A79D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+      <span style="font-size:13px; font-weight:600; color:#C9A79D;">Services</span>
+    </div>
+    <div class="navrow">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#C9A79D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.8l-5.8 3.1 1.1-6.5-4.7-4.6 6.5-.9L12 3z"/></svg>
+      <span style="font-size:13px; font-weight:600; color:#C9A79D;">Featured Spots</span>
+    </div>
+    <div class="navrow">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#C9A79D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.9l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.9-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1-1.6 1.7 1.7 0 00-1.9.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.9 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1 1.7 1.7 0 00-.3-1.9l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.9.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.9-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.9V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg>
+      <span style="font-size:13px; font-weight:600; color:#C9A79D;">Settings</span>
+    </div>
+  </div>
+
+  <div style="flex:1; overflow:hidden; padding:26px 32px; display:flex; flex-direction:column; gap:16px;">
+    <div style="display:flex; align-items:center; justify-content:space-between;">
+      <span class="head" style="font-size:20px; font-weight:800; color:#6B3F3A;">Earnings</span>
+      <div style="height:38px; padding:0 16px; border-radius:19px; border:1px solid #6B3F3A; display:flex; align-items:center;"><span style="font-size:12.5px; font-weight:700; color:#6B3F3A;">Payout account: MTN &middot;&middot;56</span></div>
+    </div>
+
+    <div style="display:flex; gap:16px;">
+      <div class="stat"><span style="font-size:11.5px; color:#8A8A8A;">Gross bookings (30 days)</span><span class="head" style="font-size:22px; font-weight:800; color:#6B3F3A;">UGX 3,240,000</span></div>
+      <div class="stat"><span style="font-size:11.5px; color:#8A8A8A;">Appointex commission (9%)</span><span class="head" style="font-size:22px; font-weight:800; color:#6B3F3A;">UGX 291,600</span></div>
+      <div class="stat"><span style="font-size:11.5px; color:#8A8A8A;">Net payout</span><span class="head" style="font-size:22px; font-weight:800; color:#6B3F3A;">UGX 2,948,400</span></div>
+      <div class="stat" style="background:#6B3F3A; border-color:#6B3F3A;"><span style="font-size:11.5px; color:#FEC89A;">Next payout</span><span class="head" style="font-size:22px; font-weight:800; color:#FFFFFF;">Fri, 29 Aug</span></div>
+    </div>
+
+    <div style="flex:1; overflow:hidden; background:#FFFFFF; border:1px solid #ECE7DC; border-radius:14px; padding:6px 22px 12px; display:flex; flex-direction:column; gap:10px;">
+      <div class="row" style="border-bottom:1px solid #E8E3D8; padding-top:16px;">
+        <span class="th" style="flex:1.2;">Date</span>
+        <span class="th" style="flex:1.6;">Client &amp; service</span>
+        <span class="th" style="flex:1;">Amount</span>
+        <span class="th" style="flex:1;">Commission</span>
+        <span class="th" style="flex:1;">Status</span>
+      </div>
+      <div class="row">
+        <span style="flex:1.2; font-size:12.5px; color:#5B5B5B;">26 Aug</span>
+        <span style="flex:1.6; font-size:12.5px; color:#6B3F3A; font-weight:600;">Aisha K. &middot; Everyday glam</span>
+        <span style="flex:1; font-size:12.5px; color:#5B5B5B;">UGX 120,000</span>
+        <span style="flex:1; font-size:12.5px; color:#5B5B5B;">UGX 10,800</span>
+        <span style="flex:1;"><span class="pill" style="background:#FBF3E7; color:#9A6B1E;">Held</span></span>
+      </div>
+      <div class="row">
+        <span style="flex:1.2; font-size:12.5px; color:#5B5B5B;">21 Aug</span>
+        <span style="flex:1.6; font-size:12.5px; color:#6B3F3A; font-weight:600;">Fiona T. &middot; Everyday glam</span>
+        <span style="flex:1; font-size:12.5px; color:#5B5B5B;">UGX 140,000</span>
+        <span style="flex:1; font-size:12.5px; color:#5B5B5B;">UGX 12,600</span>
+        <span style="flex:1;"><span class="pill" style="background:#EAF3EC; color:#2E8B57;">Released</span></span>
+      </div>
+      <div class="row">
+        <span style="flex:1.2; font-size:12.5px; color:#5B5B5B;">18 Aug</span>
+        <span style="flex:1.6; font-size:12.5px; color:#6B3F3A; font-weight:600;">Ruth M. &middot; Photoshoot makeup</span>
+        <span style="flex:1; font-size:12.5px; color:#5B5B5B;">UGX 160,000</span>
+        <span style="flex:1; font-size:12.5px; color:#5B5B5B;">UGX 14,400</span>
+        <span style="flex:1;"><span class="pill" style="background:#EAF3EC; color:#2E8B57;">Released</span></span>
+      </div>
+      <div class="row" style="border-bottom:none;">
+        <span style="flex:1.2; font-size:12.5px; color:#5B5B5B;">14 Aug</span>
+        <span style="flex:1.6; font-size:12.5px; color:#6B3F3A; font-weight:600;">Grace N. &middot; Bridal makeup</span>
+        <span style="flex:1; font-size:12.5px; color:#5B5B5B;">UGX 350,000</span>
+        <span style="flex:1; font-size:12.5px; color:#5B5B5B;">UGX 31,500</span>
+        <span style="flex:1;"><span class="pill" style="background:#EAF3EC; color:#2E8B57;">Released</span></span>
+      </div>
+      <span style="font-size:11px; color:#9A9A9A; padding-top:2px;">Held funds are released to your mobile money account within 24 hours of the appointment being marked complete.</span>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

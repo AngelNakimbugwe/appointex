@@ -1,0 +1,30 @@
+{
+  "title": "Appointex App Pages",
+  "content": {
+    "files": [
+      "Main.dc.html",
+      "Client_Onboarding.dc.html",
+      "Client_Register.dc.html",
+      "Client_Home.dc.html",
+      "Client_Urgent.dc.html",
+      "Client_Search.dc.html",
+      "Client_Provider.dc.html",
+      "Client_Book.dc.html",
+      "Client_EventBundle.dc.html",
+      "Client_Checkout.dc.html",
+      "Client_Confirmation.dc.html",
+      "Client_MyBookings.dc.html",
+      "Client_Chat.dc.html",
+      "Biz_Onboarding.dc.html",
+      "Biz_Dashboard.dc.html",
+      "Biz_Calendar.dc.html",
+      "Biz_Clients.dc.html",
+      "Biz_Earnings.dc.html",
+      "Biz_Services.dc.html",
+      "Biz_FeaturedSpots.dc.html",
+      "Biz_Settings.dc.html",
+      "canvas.json"
+    ]
+  },
+  "comments": []
+}

@@ -1,0 +1,66 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&display=swap">
+  <style>
+    body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+    h1, h2, .head { font-family: "Manrope", system-ui, sans-serif; }
+    .bubble { max-width:78%; padding:10px 13px; border-radius:15px; font-size:13px; line-height:1.45; }
+  </style>
+</helmet>
+<div style="width:390px; height:844px; background:#FDFCFA; display:flex; flex-direction:column; overflow:hidden;">
+
+  <div style="flex-shrink:0; height:60px; display:flex; align-items:center; gap:12px; padding:0 16px; border-bottom:1px solid #ECE7DC; background:#FFFFFF;">
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#6B3F3A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    <div style="width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,#F8EDEB,#FFB5A7); display:flex; align-items:center; justify-content:center;"><svg width="55%" height="55%" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="9" r="4" fill="#FFFFFF" opacity="0.92"/><path d="M4.5 20c0-4.2 3.4-7 7.5-7s7.5 2.8 7.5 7" fill="#FFFFFF" opacity="0.92"/></svg></div>
+    <div style="display:flex; flex-direction:column;">
+      <span style="font-size:13.5px; font-weight:700; color:#6B3F3A;">Patricia Glam Studio</span>
+      <span style="font-size:11px; color:#5FA777;">Online</span>
+    </div>
+  </div>
+
+  <div style="flex:1; overflow:hidden; padding:16px; display:flex; flex-direction:column; gap:10px;">
+    <div style="align-self:flex-start;" class="bubble bg">
+      <div class="bubble" style="background:#F0EEE9; color:#2A2A2A; border-bottom-left-radius:5px;">Hi! Do you have anything free on the 26th for bridal makeup?</div>
+    </div>
+    <div style="align-self:flex-end;">
+      <div class="bubble" style="background:#6B3F3A; color:#FFFFFF; border-bottom-right-radius:5px;">Yes, 12:00 pm is open. I can also do a trial the week before if you'd like.</div>
+    </div>
+    <div style="align-self:flex-start;">
+      <div class="bubble" style="background:#F0EEE9; color:#2A2A2A; border-bottom-left-radius:5px;">That'd be great. Easier if we just sort the rest on WhatsApp, call me on 0772&hellip;</div>
+    </div>
+
+    <div style="align-self:center; display:flex; align-items:center; gap:7px; padding:8px 14px; background:#FBF3E7; border:1px solid #FFB5A7; border-radius:20px; max-width:88%; margin:4px 0;">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9A6B1E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>
+      <span style="font-size:11px; color:#A66A5D; line-height:1.4; text-align:center;">Message blocked &mdash; phone numbers and contact details are shared automatically once your deposit is paid</span>
+    </div>
+
+    <div style="align-self:flex-start;">
+      <div class="bubble" style="background:#F0EEE9; color:#2A2A2A; border-bottom-left-radius:5px;">Ah okay, makes sense. I'll just book it here then.</div>
+    </div>
+  </div>
+
+  <div style="flex-shrink:0; padding:8px 16px 16px; background:#FFFFFF; border-top:1px solid #ECE7DC; display:flex; flex-direction:column; gap:8px;">
+    <span style="font-size:10.5px; color:#9A9A9A; display:flex; align-items:center; gap:5px;">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#9A9A9A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>
+      Numbers and contact info are blocked before checkout
+    </span>
+    <div style="display:flex; align-items:center; gap:10px;">
+      <div style="flex:1; height:42px; border-radius:21px; background:#F0EEE9; display:flex; align-items:center; padding:0 16px;">
+        <span style="font-size:12.5px; color:#9A9A9A;">Message Patricia&hellip;</span>
+      </div>
+      <div style="width:42px; height:42px; border-radius:50%; background:#FFB5A7; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B3F3A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/></svg>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>
