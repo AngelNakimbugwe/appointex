@@ -220,68 +220,48 @@ padding:3px 9px; border-radius:7px; font-size:10.5px; font-weight:700;
 
 ## Purpose
 
-_One paragraph: what the user is doing on this screen, and what they can reach
-from it. Written from the product's point of view, not the layout's._
+The business owner reviews what they earned: gross bookings vs Appointex commission vs net payout over the last 30 days, when the next payout lands (the dark "Next payout" tile), and the per-appointment ledger showing each payout's amount, commission and escrow status (Held / Released). The only navigation onward is the shell sidebar to the other business sections; the screen itself is read-only.
 
 ## Components used
 
-_Which `Ax*` widgets this screen composes, and any screen-local widgets it needs.
-If a screen-local widget here also appears on another screen, promote it to
-`design/widgets/` and note that here._
-
-- [ ] `AxMobileHeader`
-- [ ] …
+- `BizShell` (sidebar + scrolling pane; sidebar taps already wired by the shell)
+- `AxStatTile` — **extended additively** in this task: a `valueSize` parameter (Biz_Earnings stat values are 22 px where the dashboard's are 24) and an `AxStatTile.dark` named constructor for the `#6B3F3A` / label `#FEC89A` / value `#FFFFFF` tile (Biz_Earnings.dc.html line 71). Defaults keep the dashboard rendering byte-identical (biz_dashboard golden still passes).
+- `AxPill` — `Held` uses `pending`/`pendingBg`, `Released` uses `verified`/`verifiedBg`
+- Screen-local: `EarningsTable` (`presentation/widgets/earnings_table.dart`) and the payout-account chip (stadium outline, height 38). **Recommendation:** extend the shared `AxDataTable` with per-cell builders (pills, per-column weights, row gap, footnote) so Earnings/Services/Clients can share one implementation; today its `List<List<String>>` rows cannot express any of those.
 
 ## Data model
 
-_The fixture shape this screen reads. Name the model classes and the fixture
-constant. The copy inventory above is the source of the values._
-
-```dart
-// lib/features/<row>/<feature>/data/fixtures.dart
-```
+`lib/features/business/earnings/data/fixtures.dart` — `EarningsStat {label, value, dark}` as `kStats`, `PayoutEntry {date, clientService, amount, commission, released}` as `kPayouts`, plus `kPageTitle`, `kPayoutAccount`, `kColumns`, `kHeldLabel`, `kReleasedLabel`, `kFootnote`. All values verbatim from the copy inventory above.
 
 ## Interactions & states
 
-The artboards are static frames, so everything in this section is an extension
-of the design rather than a transcription of it. Decide it deliberately.
-
 | Element | Interaction | Result |
 |---|---|---|
-| | | |
+| Payout account chip | none | display only; opening account settings is Phase 4 |
+| Table rows | none | display only |
+| Sidebar rows | tap | navigate via BizShell (already wired) |
 
-**States not in the artboard** — specify each, or explicitly say "out of scope":
-
-- Loading:
-- Empty:
-- Error:
-- Pressed / hover:
-- Disabled:
+**States not in the artboard** — loading / empty / error are out of scope (static port; Phase 4 wires the API). Pressed / hover / disabled on the chip are Phase 4.
 
 ## Responsive notes
 
-_Per-screen deviations from [03-RESPONSIVE-RULES.md](../../03-RESPONSIVE-RULES.md).
-Which fixed dimensions were kept and why; which became flexible; where the
-scroll boundary sits._
-
-- Scroll region:
-- Kept fixed:
-- Made flexible:
-- Behaviour at 320 px / 900 px:
+- Scroll region: the whole content pane (`BizShell`'s `SingleChildScrollView`, Rule 3); the table card is the `flex:1` body via a trailing `Expanded`.
+- Kept fixed: chip height 38, stat tile padding `16 18`, row padding `12 6`, sidebar 220, all font sizes/radii/colours.
+- Made flexible: stat tiles are equal `Expanded`s (stretched to equal height, matching CSS default `align-items:stretch`); table columns are proportional flexes `6, 8, 5, 5, 5` (×5 of `1.2, 1.6, 1, 1, 1`); every cell text ellipsizes (`maxLines: 1`).
+- 900 px: tile values wrap to a second line rather than clip (CSS behaves the same — no `white-space:nowrap`); 1440 px: the card stretches with the pane. `textScaler 1.3` — the 38 px chip still holds the 16.25 px label; verified no overflow.
 
 ## Open questions
 
-_Things the artboard does not answer. Raise them rather than inventing an answer
-silently._
-
-- [ ]
+- [ ] `lib/app/router.dart` still routes `/biz/earnings` to the Phase 0 placeholder (outside this task's file set) — needs wiring.
+- [ ] The artboard gives no state for a different/missing payout account, or for what the chip should open.
+- [ ] The dark "Next payout" tile is the only dark stat tile in the design — if more appear, promote the value size (22) into `AxType` instead of the screen-local constant.
 
 ## Acceptance criteria
 
-- [ ] Golden passes at the reference size
-- [ ] No overflow across the responsive matrix
-- [ ] No overflow at `textScaler: 1.3`
-- [ ] Every string from the copy inventory present, character for character
-- [ ] All icons are `AxIcons` / `AxArt`, no Material substitutes
-- [ ] No literal colours or font sizes outside `design/tokens/`
+- [x] Golden passes at the reference size
+- [x] No overflow across the responsive matrix
+- [x] No overflow at `textScaler: 1.3`
+- [x] Every string from the copy inventory present, character for character
+- [x] All icons are `AxIcons` / `AxArt`, no Material substitutes (content pane has no icons; sidebar renders via `AxIcon`)
+- [x] No literal colours or font sizes outside `design/tokens/`
 - [ ] Layer-2 side-by-side reviewed and signed off

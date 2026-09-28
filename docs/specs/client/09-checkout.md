@@ -161,68 +161,82 @@ _None — this screen is entirely inline-styled._
 
 ## Purpose
 
-_One paragraph: what the user is doing on this screen, and what they can reach
-from it. Written from the product's point of view, not the layout's._
+The pay leg of the booking flow: the client confirms where the appointment
+happens ("At my location"), reviews the itemised total — service, add-ons,
+service fee, urgent booking fee, mobile service fee — chooses a mobile-money
+wallet (MTN or Airtel), verifies the masked number, and confirms payment,
+which lands on the confirmation screen.
 
 ## Components used
 
-_Which `Ax*` widgets this screen composes, and any screen-local widgets it needs.
-If a screen-local widget here also appears on another screen, promote it to
-`design/widgets/` and note that here._
-
-- [ ] `AxMobileHeader`
-- [ ] …
+- `AxPrimaryButton` — footer "Confirm payment" (height 50, label 14.5)
+- Screen-local (kept local on purpose):
+  - `_HeaderBar` — the artboard's 56 px header (`padding:0 16px`); same
+    rationale as EventBundle's, and the two should be promoted together if
+    a third screen uses this exact header
+  - `_Rule` — the 1 px `#E8E3D8` divider with 2 px vertical margins
+  - `_MethodRow` — wallet row: 34×24 brand tile, label, 18 px radio ring
+    (5.5 px border when selected, 1.5 px when not)
+  - `_NumberField` — the masked mobile-money number field
+  - `_CostCard` / `_CostLine` / `_SecurityNotes` — single-screen composites
 
 ## Data model
 
-_The fixture shape this screen reads. Name the model classes and the fixture
-constant. The copy inventory above is the source of the values._
+`Checkout`, `CheckoutLine`, `CheckoutPaymentMethod`, `CheckoutNote`; fixture
+`kCheckout` in `lib/features/client/checkout/data/fixtures.dart` — all
+strings verbatim from the copy inventory.
 
 ```dart
-// lib/features/<row>/<feature>/data/fixtures.dart
+// lib/features/client/checkout/data/fixtures.dart
+const kCheckout = Checkout(...);
 ```
 
 ## Interactions & states
 
-The artboards are static frames, so everything in this section is an extension
-of the design rather than a transcription of it. Decide it deliberately.
-
 | Element | Interaction | Result |
 |---|---|---|
-| | | |
+| Back arrow | tap | `context.pop()` |
+| "Change" (location) | tap | location picker — Phase 4 (no artboard) |
+| MTN / Airtel rows | tap | wallet selection is static (MTN selected); live selection — Phase 4 |
+| Mobile money number | tap | edit — Phase 4 |
+| "Confirm payment" | tap | `context.go('/confirmation')` |
 
-**States not in the artboard** — specify each, or explicitly say "out of scope":
+**States not in the artboard**
 
-- Loading:
-- Empty:
-- Error:
-- Pressed / hover:
-- Disabled:
+- Loading: out of scope (fixture-driven static port)
+- Empty: out of scope
+- Error: out of scope (payment failure states unspecified)
+- Pressed / hover: Phase 4
+- Disabled: Phase 4 (button never disabled in the static frame)
 
 ## Responsive notes
 
-_Per-screen deviations from [03-RESPONSIVE-RULES.md](../../03-RESPONSIVE-RULES.md).
-Which fixed dimensions were kept and why; which became flexible; where the
-scroll boundary sits._
-
-- Scroll region:
-- Kept fixed:
-- Made flexible:
-- Behaviour at 320 px / 900 px:
+- Scroll region: `Expanded > SingleChildScrollView` between the fixed
+  header and the fixed footer (total + CTA stay visible — Rule 3)
+- Kept fixed: header 56, brand tiles 34×24, radio rings 18, number field 46,
+  button 50
+- Made flexible: fee-row labels and amounts sit in `Flexible` so they wrap
+  instead of overflowing (CSS `flex-shrink: 1` semantics); card/field widths
+  fill the content column
+- The 18 px footer total and the 8 px Airtel brand label have no `AxType`
+  step — cited local values (see screen / fixtures)
+- No bottom nav — full-screen flow
+- At 320 px and at `textScaler 1.3`: no overflow (tested)
 
 ## Open questions
 
-_Things the artboard does not answer. Raise them rather than inventing an answer
-silently._
-
-- [ ]
+- [ ] Where does "Change" (location) lead? No location-picker artboard.
+- [ ] The Airtel brand label is 8 px — below the type scale's smallest step.
+      Kept as fixture data with an artboard citation; flagged in case design
+      wants it bumped to 9.
+- [ ] Payment failure / pending states are unspecified in the artboards.
 
 ## Acceptance criteria
 
-- [ ] Golden passes at the reference size
-- [ ] No overflow across the responsive matrix
-- [ ] No overflow at `textScaler: 1.3`
-- [ ] Every string from the copy inventory present, character for character
-- [ ] All icons are `AxIcons` / `AxArt`, no Material substitutes
-- [ ] No literal colours or font sizes outside `design/tokens/`
+- [x] Golden passes at the reference size
+- [x] No overflow across the responsive matrix
+- [x] No overflow at `textScaler: 1.3`
+- [x] Every string from the copy inventory present, character for character
+- [x] All icons are `AxIcons` / `AxArt`, no Material substitutes
+- [x] No literal colours or font sizes outside `design/tokens/`
 - [ ] Layer-2 side-by-side reviewed and signed off

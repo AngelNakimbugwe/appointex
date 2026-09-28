@@ -172,68 +172,62 @@ display:flex; flex-direction:column; align-items:center; gap:5px; flex-shrink:0;
 
 ## Purpose
 
-_One paragraph: what the user is doing on this screen, and what they can reach
-from it. Written from the product's point of view, not the layout's._
+Urgent-booking entry point reached from Home. The user picks a service category and a time window, is shown only providers with a genuinely open slot in that window (rush fee disclosed up front), and drills into a provider to book.
 
 ## Components used
 
-_Which `Ax*` widgets this screen composes, and any screen-local widgets it needs.
-If a screen-local widget here also appears on another screen, promote it to
-`design/widgets/` and note that here._
-
-- [ ] `AxMobileHeader`
-- [ ] …
+- [x] `AxAvatar` — 56px, radius 12, art passed via `child` at the artboard's exact 52% (29.12) rather than the widget's 55% default
+- [x] `AxVerifiedBadge`
+- [x] `AxIcon` / `AxArt` — `chevronLeft`, `boltFill` (16 header / 18 banner / 11 slot pill), `clock`, `catHair`/`catMakeup`/`catNails`/`catSpa`, `artMakeup`/`artNails`
+- [ ] `AxMobileHeader` — **not used**: this artboard's header is the 56px `0 16` bordered bar (line 19), which `AxMobileHeader` does not cover (it models the Home/inner-page padding). Local `_Header` kept in the screen file. Same bar appears on Book, Checkout, EventBundle and Search — see Open questions.
+- [ ] `AxProviderRow` — **not used**: `AxProviderRow.urgent` renders `feeSummary` as flat 11.5px text, but the artboard's fee line ends in a bold `#6B3F3A` nested span with `margin-top:1px` (lines 102, 115). Local `UrgentMatchRow` in `presentation/widgets/`. See Open questions.
+- Local: `_Banner`, `_CategoryPicker`/`_Catchip` (Tier 3 `.catchip`), `_WindowPicker`/`_WindowOption`, `_RushNote` — all screen-private in `urgent_screen.dart`.
 
 ## Data model
 
-_The fixture shape this screen reads. Name the model classes and the fixture
-constant. The copy inventory above is the source of the values._
-
-```dart
-// lib/features/<row>/<feature>/data/fixtures.dart
-```
+`lib/features/client/urgent/data/fixtures.dart` — `UrgentCategory`, `UrgentWindow`,
+`UrgentMatch` (id, name, subtitle, slotTime, feeBase, feeTotal, art, gradient)
+plus `kUrgentCategories`, `kUrgentWindows`, `kUrgentMatches` and the `kUrgent*`
+copy constants. The fee is split `feeBase`/`feeTotal` because the artboard
+styles the two halves differently.
 
 ## Interactions & states
 
-The artboards are static frames, so everything in this section is an extension
-of the design rather than a transcription of it. Decide it deliberately.
-
 | Element | Interaction | Result |
 |---|---|---|
-| | | |
+| Back arrow | tap | `context.pop()` → `/home` |
+| Provider match row | tap | `context.go('/provider/:id')` (fixture ids) |
+| Category chip | tap | Phase 4 — selection + re-filter of matches |
+| Time window | tap | Phase 4 — selection; heading count follows |
 
-**States not in the artboard** — specify each, or explicitly say "out of scope":
-
-- Loading:
-- Empty:
-- Error:
-- Pressed / hover:
-- Disabled:
+- Loading: out of scope (fixtures only)
+- Empty: out of scope
+- Error: out of scope
+- Pressed / hover: Phase 4
+- Disabled: n/a
 
 ## Responsive notes
 
-_Per-screen deviations from [03-RESPONSIVE-RULES.md](../../03-RESPONSIVE-RULES.md).
-Which fixed dimensions were kept and why; which became flexible; where the
-scroll boundary sits._
-
-- Scroll region:
-- Kept fixed:
-- Made flexible:
-- Behaviour at 320 px / 900 px:
+- Scroll region: everything below the fixed 56px header (Rule 3) — banner, pickers, note and provider list all scroll.
+- Kept fixed: header 56; `.catchip` 58 wide with 44px tile; banner icon tile 36; avatar 56 (art 29.12); window option padding 11/14.
+- Made flexible: window label/fee texts wrap inside `Flexible` (CSS spans wrap under constraint); slot pill text wraps; header title sits in `Expanded`.
+- The category row is a horizontal scroller (`SingleChildScrollView` + `Row`) so the fixed 58px chips never wrap; at 390 all four fit.
+- Urgent gradient is the Rule-9 120deg approximation (`AxGradients.urgent`).
+- Behaviour at 320 px / 900 px: verified no overflow at 320/390/430 and at textScaler 1.3. 900 px is a business-form-factor concern — out of scope; the content column simply stretches.
 
 ## Open questions
 
-_Things the artboard does not answer. Raise them rather than inventing an answer
-silently._
-
-- [ ]
+- [ ] Five client artboards (Urgent, Search, Book, Checkout, EventBundle) share this 56px `0 16` bordered header bar; `AxMobileHeader` should grow an inner-page variant so it can be shared.
+- [ ] `AxProviderRow.urgent` should accept a rich fee line (base + bold total, +1px top offset) instead of a flat string; the urgent screen currently carries a local row.
+- [ ] Do category/window taps re-filter the match list and heading count ("2 providers can fit you in this window")? Phase 4.
+- [ ] No bottom nav on this artboard — confirmed absent, none embedded.
 
 ## Acceptance criteria
 
-- [ ] Golden passes at the reference size
-- [ ] No overflow across the responsive matrix
-- [ ] No overflow at `textScaler: 1.3`
-- [ ] Every string from the copy inventory present, character for character
-- [ ] All icons are `AxIcons` / `AxArt`, no Material substitutes
-- [ ] No literal colours or font sizes outside `design/tokens/`
+- [x] Golden passes at the reference size
+- [x] No overflow across the responsive matrix
+- [x] No overflow at `textScaler: 1.3`
+- [x] Every string from the copy inventory present, character for character
+- [x] All icons are `AxIcons` / `AxArt`, no Material substitutes
+- [x] No literal colours or font sizes outside `design/tokens/`
 - [ ] Layer-2 side-by-side reviewed and signed off

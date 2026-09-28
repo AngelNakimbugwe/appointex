@@ -38,6 +38,18 @@ abstract final class AxColors {
   static const Color greyPanel = Color(0xFFEFEFEF);
   static const Color roseMuted = Color(0xFFD9BFB8);
 
+  // Also present in the markup, mapped 1:1 (promoted from screen-local
+  // constants — each traces to the artboards listed)
+  /// Hero decorative blob rose — Client_Onboarding, Client_Urgent,
+  /// Client_Search, Client_Provider, Client_Confirmation, Biz_FeaturedSpots.
+  static const Color roseGlow = Color(0xFFD98B96);
+
+  /// Onboarding tagline text — Client_Onboarding.
+  static const Color tagline = Color(0xFF7A4F48);
+
+  /// Dark video-overlay navy, used with alpha — Client_Provider.
+  static const Color navyOverlay = Color(0xFF1B2A4A);
+
   // Text ramp
   static const Color textStrong = Color(0xFF2A2A2A);
   static const Color textPrimary = Color(0xFF3A3A3A);

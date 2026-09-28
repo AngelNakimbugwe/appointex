@@ -17,6 +17,9 @@ abstract final class AxType {
   static const double title = 16;
   static const double bodyLg = 15;
   static const double body = 14.5;
+
+  /// The 14 step of docs/01's "14.5 / 14" body bucket.
+  static const double body14 = 14;
   static const double bodySm = 13.5;
   static const double label = 13;
   static const double labelSm = 12.5;
@@ -26,6 +29,9 @@ abstract final class AxType {
   static const double microSm = 10.5;
   static const double nano = 10;
   static const double nanoSm = 9.5;
+
+  /// The 9 step of docs/01's "9.5 / 9" nanoSm bucket.
+  static const double nano9 = 9;
   static const double tiny = 8.5;
 
   /// CSS `letter-spacing: 0.06em` → Flutter `letterSpacing: fontSize * 0.06`.

@@ -1,7 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
-import '../../../../../design/icons/ax_icon.dart';
-import '../../../../../design/icons/ax_icons.dart';
 import '../../../../../design/tokens/ax_colors.dart';
 import '../../../../../design/tokens/ax_radius.dart';
 import '../../../../../design/tokens/ax_space.dart';
@@ -9,10 +9,70 @@ import '../../../../../design/tokens/ax_type.dart';
 import '../../../../../design/widgets/ax_avatar.dart';
 import '../../data/fixtures.dart';
 
-class HomeCarousel extends StatelessWidget {
+/// Full-width promo carousel. Auto-advances every 2 s (wrapping around),
+/// swipes with page snapping, and the dots track and jump to pages.
+///
+/// Deviation from Client_Home.dc.html (lines 48-49): the artboard's card is
+/// 300 px wide with a 40 px peek teaser; the product call is a full-width
+/// card (viewport minus the 20 px page padding), with the next card's edge
+/// peeking mid-swipe instead of the translucent sliver.
+class HomeCarousel extends StatefulWidget {
   const HomeCarousel({super.key, required this.promos});
 
   final List<HomePromo> promos;
+
+  @override
+  State<HomeCarousel> createState() => _HomeCarouselState();
+}
+
+class _HomeCarouselState extends State<HomeCarousel> {
+  final PageController _controller = PageController();
+  Timer? _autoAdvance;
+  int _page = 0;
+
+  static const Duration _advanceInterval = Duration(seconds: 2);
+  static const Duration _advanceDuration = Duration(milliseconds: 350);
+
+  @override
+  void initState() {
+    super.initState();
+    _scheduleAutoAdvance();
+  }
+
+  @override
+  void dispose() {
+    _autoAdvance?.cancel();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _scheduleAutoAdvance() {
+    _autoAdvance?.cancel();
+    _autoAdvance = Timer(_advanceInterval, _advance);
+  }
+
+  void _advance() {
+    if (!mounted || !_controller.hasClients) return;
+    if (_controller.position.isScrollingNotifier.value) {
+      _scheduleAutoAdvance();
+      return;
+    }
+    final next = (_page + 1) % widget.promos.length;
+    _controller.animateToPage(
+      next,
+      duration: _advanceDuration,
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  void _goToPage(int page) {
+    _scheduleAutoAdvance();
+    _controller.animateToPage(
+      page,
+      duration: _advanceDuration,
+      curve: Curves.easeOutCubic,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,20 +82,25 @@ class HomeCarousel extends StatelessWidget {
       children: [
         SizedBox(
           height: 112,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
+          child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: AxSpace.pageH),
-            separatorBuilder: (_, __) => const SizedBox(width: AxSpace.s12),
-            itemCount: promos.length + 1,
-            itemBuilder: (context, index) {
-              if (index < promos.length) {
-                return _PromoCard(promo: promos[index]);
-              }
-              return const _PeekCard();
-            },
+            child: PageView.builder(
+              controller: _controller,
+              onPageChanged: (page) {
+                setState(() => _page = page);
+                _scheduleAutoAdvance();
+              },
+              itemCount: widget.promos.length,
+              itemBuilder: (context, index) =>
+                  _PromoCard(promo: widget.promos[index]),
+            ),
           ),
         ),
-        const _CarouselDots(),
+        _CarouselDots(
+          pageCount: widget.promos.length,
+          current: _page,
+          onTap: _goToPage,
+        ),
       ],
     );
   }
@@ -49,7 +114,6 @@ class _PromoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 300,
       height: 112,
       decoration: const BoxDecoration(
         color: AxColors.brand,
@@ -76,6 +140,7 @@ class _PromoCard extends StatelessWidget {
                       radius: AxRadius.md,
                       art: promo.avatarArt,
                       gradient: promo.avatarGradient,
+                      imageAsset: promo.imageAsset,
                     ),
                     Flexible(
                       child: Column(
@@ -148,52 +213,54 @@ class _DecorCircle extends StatelessWidget {
   }
 }
 
-class _PeekCard extends StatelessWidget {
-  const _PeekCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 40,
-      height: 112,
-      decoration: BoxDecoration(
-        color: AxColors.salmon.withValues(alpha: 0.35),
-        borderRadius: const BorderRadius.all(Radius.circular(AxRadius.lg)),
-      ),
-    );
-  }
-}
-
 class _CarouselDots extends StatelessWidget {
-  const _CarouselDots();
+  const _CarouselDots({
+    required this.pageCount,
+    required this.current,
+    required this.onTap,
+  });
+
+  final int pageCount;
+  final int current;
+  final ValueChanged<int> onTap;
 
   @override
   Widget build(BuildContext context) {
-    return const Row(
+    return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       spacing: AxSpace.s6,
       children: [
-        _Dot(active: true),
-        _Dot(active: false),
-        _Dot(active: false),
+        for (var i = 0; i < pageCount; i++)
+          _Dot(
+            key: ValueKey('home-carousel-dot-$i'),
+            active: i == current,
+            onTap: i == current ? null : () => onTap(i),
+          ),
       ],
     );
   }
 }
 
 class _Dot extends StatelessWidget {
-  const _Dot({required this.active});
+  const _Dot({super.key, required this.active, this.onTap});
 
   final bool active;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: active ? 16 : 6,
-      height: 6,
-      decoration: BoxDecoration(
-        color: active ? AxColors.brand : AxColors.dividerWarm,
-        borderRadius: const BorderRadius.all(Radius.circular(AxRadius.dot)),
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+        width: active ? 16 : 6,
+        height: 6,
+        decoration: BoxDecoration(
+          color: active ? AxColors.brand : AxColors.dividerWarm,
+          borderRadius: const BorderRadius.all(Radius.circular(AxRadius.dot)),
+        ),
       ),
     );
   }

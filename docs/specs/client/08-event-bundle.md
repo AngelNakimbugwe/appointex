@@ -140,68 +140,84 @@ font-size:12px; font-weight:600; padding:8px 14px; border-radius:16px; border:1p
 
 ## Purpose
 
-_One paragraph: what the user is doing on this screen, and what they can reach
-from it. Written from the product's point of view, not the layout's._
+The event-planning screen: the client names the occasion (wedding, kwanjula,
+graduation, photoshoot), sees the chosen date, and assembles the provider team
+— hair, makeup, photography — into one bundle with a combined total, then
+continues to checkout to pay for the whole team at once.
 
 ## Components used
 
-_Which `Ax*` widgets this screen composes, and any screen-local widgets it needs.
-If a screen-local widget here also appears on another screen, promote it to
-`design/widgets/` and note that here._
-
-- [ ] `AxMobileHeader`
-- [ ] …
+- `AxChip` — the `.etype` event-type chips (selected "Wedding" renders
+  filled brand)
+- `AxAvatar` — 38 px service tiles (art + one of the avatar gradients,
+  `artScale` 0.52–0.55 per row)
+- `AxPrimaryButton` — footer "Review & pay" (height 50, label 14.5)
+- Screen-local (kept local on purpose):
+  - `_HeaderBar` — the artboard's 56 px header (`padding:0 16px`) differs from
+    `AxMobileHeader`'s documented padding, so it is not that component
+  - `_DashedBorderPainter` — the 1.5 px dashed "Add another service" border
+    has no Flutter equivalent
+  - `_FooterBar`, `_ServiceRow`, `_DateCard`, `_IntroSection` — single-screen
+    composites
 
 ## Data model
 
-_The fixture shape this screen reads. Name the model classes and the fixture
-constant. The copy inventory above is the source of the values._
+`EventBundle`, `EventBundleType`, `EventBundleService`; fixture
+`kEventBundle` in `lib/features/client/event_bundle/data/fixtures.dart` —
+all strings verbatim from the copy inventory.
 
 ```dart
-// lib/features/<row>/<feature>/data/fixtures.dart
+// lib/features/client/event_bundle/data/fixtures.dart
+const kEventBundle = EventBundle(...);
 ```
 
 ## Interactions & states
 
-The artboards are static frames, so everything in this section is an extension
-of the design rather than a transcription of it. Decide it deliberately.
-
 | Element | Interaction | Result |
 |---|---|---|
-| | | |
+| Back arrow | tap | `context.pop()` |
+| Event-type chip | tap | selection is static ("Wedding"); live selection — Phase 4 |
+| "Change" (date) | tap | date picker — Phase 4 (no artboard) |
+| Service row check | none | display only |
+| "Add another service" | tap | provider picker — Phase 4 |
+| "Review & pay" | tap | `context.go('/checkout')` |
 
-**States not in the artboard** — specify each, or explicitly say "out of scope":
+**States not in the artboard**
 
-- Loading:
-- Empty:
-- Error:
-- Pressed / hover:
-- Disabled:
+- Loading: out of scope (fixture-driven static port)
+- Empty: out of scope
+- Error: out of scope
+- Pressed / hover: Phase 4
+- Disabled: n/a
 
 ## Responsive notes
 
-_Per-screen deviations from [03-RESPONSIVE-RULES.md](../../03-RESPONSIVE-RULES.md).
-Which fixed dimensions were kept and why; which became flexible; where the
-scroll boundary sits._
-
-- Scroll region:
-- Kept fixed:
-- Made flexible:
-- Behaviour at 320 px / 900 px:
+- Scroll region: `Expanded > SingleChildScrollView` between the fixed 56 px
+  header and the fixed footer bar (Rule 3)
+- Kept fixed: header 56, avatar tiles 38, check icon 18, plus icon 16, footer
+  button 50
+- Made flexible: page fills the viewport; the `.etype` chip row scrolls
+  horizontally rather than wrapping (docs/04 §AxChip); the "Add another
+  service" label sits in a `Flexible` so it can shrink/wrap like CSS
+  `flex-shrink: 1`
+- No bottom nav — the artboard shows none (this is a full-screen flow into
+  checkout)
+- At 320 px and at `textScaler 1.3` the body scrolls; no overflow (tested)
 
 ## Open questions
 
-_Things the artboard does not answer. Raise them rather than inventing an answer
-silently._
-
-- [ ]
+- [ ] Is the selected event type app state or URL state? The artboard only
+      shows "Wedding" selected.
+- [ ] Where does "Change" (date) lead? No date-picker artboard exists.
+- [ ] Live totals ("3 providers", "UGX 650,000") are fixture strings here;
+      real aggregation arrives with state management (Phase 4).
 
 ## Acceptance criteria
 
-- [ ] Golden passes at the reference size
-- [ ] No overflow across the responsive matrix
-- [ ] No overflow at `textScaler: 1.3`
-- [ ] Every string from the copy inventory present, character for character
-- [ ] All icons are `AxIcons` / `AxArt`, no Material substitutes
-- [ ] No literal colours or font sizes outside `design/tokens/`
+- [x] Golden passes at the reference size
+- [x] No overflow across the responsive matrix
+- [x] No overflow at `textScaler: 1.3`
+- [x] Every string from the copy inventory present, character for character
+- [x] All icons are `AxIcons` / `AxArt`, no Material substitutes
+- [x] No literal colours or font sizes outside `design/tokens/`
 - [ ] Layer-2 side-by-side reviewed and signed off

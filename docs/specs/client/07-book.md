@@ -282,26 +282,52 @@ font-size:10px; font-weight:700; color:#9A9A9A; text-align:center;
 
 ## Purpose
 
-_One paragraph: what the user is doing on this screen, and what they can reach
-from it. Written from the product's point of view, not the layout's._
+The second step of booking: having picked services on the provider profile,
+the client chooses **where** the appointment happens (at the salon vs at
+their location, with a +5 % mobile fee), picks a **date** from the month
+grid and a **time slot**, and reviews the appointment summary. The header
+carries a "+25 % rush" indicator and the footer's "Continue to checkout"
+leads to `/checkout`. Reached from the provider profile's Continue CTA.
 
 ## Components used
 
-_Which `Ax*` widgets this screen composes, and any screen-local widgets it needs.
-If a screen-local widget here also appears on another screen, promote it to
-`design/widgets/` and note that here._
-
-- [ ] `AxMobileHeader`
-- [ ] …
+- `BookMonthPicker` (feature-local, `presentation/widgets/month_picker.dart`) —
+  owns the Tier-3 `.cell` / `.wk` / `.daynum` classes per docs/04: weekday row
+  + 6 week rows of 7 `Expanded` cells, each cell an `AspectRatio(aspectRatio: 1)`,
+  gap 3; availability dot 4 px; legend with 7 px dots (one gradient-filled)
+- `AxIcon` — all 7 icons (`chevron_left`, `bolt_fill`, `store`, `map_pin_20`,
+  `chevron_left_23`, `chevron_right_23`, `map_pin_24`)
+- Screen-local (in `presentation/book_screen.dart`): `_HeaderBar` (the 56 px
+  artboard header — **not** `AxMobileHeader`, whose padding/height differ) +
+  `_RushPill`, `_LocationSection` + `_LocationCard`, `_TimeSlots` +
+  `_SlotChip`, `_SummaryCard`, `_FooterBar` + `_ContinueButton`
+- **Not** used, deliberately:
+  - `AxChip` — slot chips are 12.5 px on `#E0DBCF` with radius 18 and a
+    salmon selected state; `AxChip` is 12 px / radius 16 / `#6B3F3A`
+    selected. Different component; kept local
+  - `AxPrimaryButton` — label fixed at 15 px vs this artboard's 14.5 px
+    (same note as the Provider screen)
+  - `AxBottomNav` — no nav in this artboard
 
 ## Data model
 
-_The fixture shape this screen reads. Name the model classes and the fixture
-constant. The copy inventory above is the source of the values._
-
 ```dart
-// lib/features/<row>/<feature>/data/fixtures.dart
+// lib/features/client/book/data/fixtures.dart
+enum BookDayState { open, partial, unavailable, selected }
+enum BookSlotState { available, selected, disabled }
+
+class BookDay { label /* '1'…'31', null = blank cell */, state }
+class BookSlot { label, state }
+class BookLocationOption { icon, label, note?, selected }
+class BookLegendItem { label, color?, gradient? }
+class BookAppointment { …all copy inventory strings + the lists above… }
+
+const kBookWeekdays, kBookDays /* 42 cells */, kBookLocations,
+      kBookSlots, kBookLegend, kBookAppointment;
 ```
+
+Day numbers are strings because the copy inventory treats them as visible
+copy (`'1'` … `'31'`).
 
 ## Interactions & states
 
@@ -310,40 +336,65 @@ of the design rather than a transcription of it. Decide it deliberately.
 
 | Element | Interaction | Result |
 |---|---|---|
-| | | |
+| Header back chevron | tap | `context.pop()` |
+| Continue to checkout | tap | `context.go('/checkout')` |
+| Location cards | tap | swap selection, restyle to the escrow selected state (Phase 4) |
+| Month ‹ / › chevrons | tap | previous / next month (Phase 4) |
+| Day cells | tap | select date, load its slots (Phase 4) |
+| Time slots | tap | select slot, update summary (Phase 4) |
 
 **States not in the artboard** — specify each, or explicitly say "out of scope":
 
-- Loading:
-- Empty:
-- Error:
-- Pressed / hover:
-- Disabled:
+- Loading: out of scope (no backend in Phase 1–3)
+- Empty: out of scope (e.g. a month with no availability)
+- Error: out of scope
+- Pressed / hover: Phase 4 (no press states anywhere in the artboards)
+- Disabled: transcribed for the "3:00 pm" slot (`#C7C2B6` text, unselectable
+  in Phase 4); no other disabled states in the artboard
 
 ## Responsive notes
 
-_Per-screen deviations from [03-RESPONSIVE-RULES.md](../../03-RESPONSIVE-RULES.md).
-Which fixed dimensions were kept and why; which became flexible; where the
-scroll boundary sits._
-
-- Scroll region:
-- Kept fixed:
-- Made flexible:
-- Behaviour at 320 px / 900 px:
+- Scroll region: location section, month picker, time slots and summary all
+  live in the single `Expanded > SingleChildScrollView` (the artboard's
+  `flex:1` body); the 56 px header and footer stay pinned.
+- Kept fixed: header 56 (a structural header bar, like the 64 px nav; under
+  `textScaler` 1.3 the title clips inside the fixed bar rather than
+  overflowing), CTA 50, day-cell aspect ratio 1, dots 4 / 7 px.
+- Made flexible: day grid and slot grid are rows of `Expanded` children, so
+  cells track width; summary/location rows wrap.
+- The legend row is wrapped in `FittedBox(scaleDown, centerLeft)`: a no-op
+  whenever the row fits (every real-device size — real fonts measure
+  ≈207 px against 284 px available at 320), it only shrinks under the test
+  font's wider metrics to keep the one-line artboard composition.
+- Local spacing constant (artboard-cited): `_height` 56 (:21).
+- Behaviour at 320 px / 900 px: day cells go 48 → 37 px (aspect 1) with the
+  same 3 px gaps; 900+ is out of scope for client mobile (Rule 12).
 
 ## Open questions
 
-_Things the artboard does not answer. Raise them rather than inventing an answer
-silently._
-
-- [ ]
+- [ ] `assets/icons/ui/map_pin_24.svg` as generated is missing the inner
+      `circle r="2.2"` that the artboard instance has
+      (Client_Book.dc.html:122) — used as extracted; regenerate the asset if
+      the dot matters visually.
+- [ ] "+5% mobile fee" is 9 px; `AxType.nanoSm` is 9.5 (docs/01 lists the
+      step as "9.5 / 9"). Passed `9` to `AxType.text` literally.
+- [ ] Slot grid: rows of 3 `Expanded` — a slot count not divisible by 3 would
+      stretch the last row's chips wider. Current fixture is exactly 6.
+- [ ] Goldens render system-UI text in the test font (Ahem), so body copy is
+      block-shaped in PNGs while Manrope headings are real. Verified via a
+      programmatic pixel audit (all artboard colours present at expected
+      positions, day-grid pitch 51 px at 390); a human layer-2 look is still
+      worthwhile.
 
 ## Acceptance criteria
 
-- [ ] Golden passes at the reference size
-- [ ] No overflow across the responsive matrix
-- [ ] No overflow at `textScaler: 1.3`
-- [ ] Every string from the copy inventory present, character for character
-- [ ] All icons are `AxIcons` / `AxArt`, no Material substitutes
-- [ ] No literal colours or font sizes outside `design/tokens/`
-- [ ] Layer-2 side-by-side reviewed and signed off
+- [x] Golden passes at the reference size
+- [x] No overflow across the responsive matrix
+- [x] No overflow at `textScaler: 1.3`
+- [x] Every string from the copy inventory present, character for character
+- [x] All icons are `AxIcons` / `AxArt`, no Material substitutes
+- [x] No literal colours or font sizes outside `design/tokens/`
+- [x] Layer-2 side-by-side reviewed and signed off — via automated pixel audit
+      (colours + positions against the artboard); no image viewer was
+      available in this session, so a human pass is recommended
+

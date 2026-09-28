@@ -251,68 +251,110 @@ flex:1; border-radius:12px; padding:14px 16px; display:flex; flex-direction:colu
 
 ## Purpose
 
-_One paragraph: what the user is doing on this screen, and what they can reach
-from it. Written from the product's point of view, not the layout's._
+The provider's account and configuration screen: business identity and
+portfolio, team members, the two opt-in service modes (urgent bookings with
+their platform-set rush rates, mobile service with its client travel fee),
+the payout account, the commission plan (current 9% vs the 5% reduced rate
+they qualify for once 20 consecutive in-app bookings), and notification
+preferences.
 
 ## Components used
 
-_Which `Ax*` widgets this screen composes, and any screen-local widgets it needs.
-If a screen-local widget here also appears on another screen, promote it to
-`design/widgets/` and note that here._
-
-- [ ] `AxMobileHeader`
-- [ ] …
+- `BizShell` — `Scaffold(body: BizShell(current: AxSidebarItem.settings, …))`
+- `AxSidebarItem` routing via `context.go` to the `AxRoutes.biz*` paths
+- `AxCard` — every panel, at the `.card` defaults (radius 14, padding
+  `18 20`, inner column gap 12)
+- `AxPlanCard` — both commission plans: the selected one (`#6B3F3A` +
+  `1.5px solid`) and the dashed-border alternate (`#F7F5F1`,
+  `1.5px dashed #D7D1C2`)
+- `AxToggle` — all five switches (36×20). Note the real constructor
+  signature is `value` / `onChanged`.
+- `AxAvatar` — profile 44 px radius 12 (`avatarBlush`, `artMakeup` at 52%);
+  team 28 px as circles (radius = size/2) with a `personFill` child at 55%
+- `AxIcon` — `boltFill` 15 `#E8433D` (urgent) and `mapPin23` 15 `#3D8B85`
+  (mobile service — the escrow/held-payment teal, `AxColors.escrow`)
+- Screen-local: `_SettingsContent`, `_ProfileColumn`, `_CardTitle`,
+  `_BusinessProfileCard`, `_TeamCard`, `_TeamRow`, `_UrgentBookingsCard`,
+  `_RateTile`, `_MobileServiceCard`, `_PayoutAccountCard`, `_PlansColumn`,
+  `_CommissionPlanCard`, `_NotificationsCard`, `_ToggleRow`,
+  `_ToggleCardHeader`
+- Import note: `AxArt` exists both as a widget (`design/icons/ax_icon.dart`)
+  and as the generated asset-constant class (`design/icons/ax_icons.dart`).
+  The screen imports the former with `hide AxArt` so `AxArt.artMakeup`
+  resolves to the asset path.
 
 ## Data model
 
-_The fixture shape this screen reads. Name the model classes and the fixture
-constant. The copy inventory above is the source of the values._
-
 ```dart
-// lib/features/<row>/<feature>/data/fixtures.dart
+// lib/features/business/settings/data/fixtures.dart
+class TeamMember { final String name, role; final Gradient gradient; }
+const List<TeamMember> kTeam;            // 2 rows: Owner, Assistant
+class RushRate { final String label, value; }
+const List<RushRate> kUrgentRates;      // Today +15% / 3 hrs +25% / ASAP +40%
+const String kPageTitle, kBusinessProfileTitle, kBusinessName,
+    kBusinessLocation, kPortfolioSummary, kManagePortfolio;
+const String kTeamTitle, kUrgentTitle, kUrgentDescription, kUrgentFootnote;
+const String kMobileTitle, kMobileDescription, kTravelFeeLabel,
+    kTravelFeeValue, kMobileFootnote;
+const String kPayoutTitle, kPayoutAccount, kPayoutChange;
+const String kCommissionTitle, kCurrentPlanEyebrow, kCurrentPlanValue,
+    kCurrentPlanDescription, kAvailablePlanEyebrow, kAvailablePlanValue,
+    kAvailablePlanDescription, kCommissionFootnote;
+const String kNotificationsTitle, kNotifyBookings, kNotifyPayouts,
+    kNotifyMarketing;
+const bool kUrgentEnabled, kMobileEnabled, kBookingRequestsEnabled,
+    kPayoutConfirmationsEnabled, kMarketingTipsEnabled;  // on/on/on/on/off
 ```
 
 ## Interactions & states
 
-The artboards are static frames, so everything in this section is an extension
-of the design rather than a transcription of it. Decide it deliberately.
+Each toggle-holding card is its own `StatefulWidget` and owns its switch
+state; initial values come from the fixtures, as drawn.
 
 | Element | Interaction | Result |
 |---|---|---|
-| | | |
+| Sidebar rows | tap | `context.go` to the matching `/biz/*` route |
+| Urgent / Mobile / ×3 notification toggles | tap | flips that card's state (`setState` local to the card) |
+| "Manage portfolio", "Change", plan cards | tap | inert — no artboard target |
 
-**States not in the artboard** — specify each, or explicitly say "out of scope":
+**States not in the artboard**
 
-- Loading:
-- Empty:
-- Error:
-- Pressed / hover:
-- Disabled:
+- Loading: Phase 4.
+- Empty: n/a (all sections have content).
+- Error: out of scope.
+- Pressed / hover: none.
+- Disabled: n/a.
 
 ## Responsive notes
 
-_Per-screen deviations from [03-RESPONSIVE-RULES.md](../../03-RESPONSIVE-RULES.md).
-Which fixed dimensions were kept and why; which became flexible; where the
-scroll boundary sits._
-
-- Scroll region:
-- Kept fixed:
-- Made flexible:
-- Behaviour at 320 px / 900 px:
+- Scroll region: `BizShell`'s content pane (Rule 3). The notifications card
+  is an `Expanded` (artboard `.card` with `flex:1`) so the right column fills
+  the pane; taller content scrolls.
+- Kept fixed: 44/28 px avatars, 36×20 toggles, 15 px card-header icons,
+  `8 6` rate-tile padding, 9 px tile radius.
+- Made flexible: the two columns at flex 1:1, gap 18; plan cards stretch to
+  equal height (CSS flex `align-items: stretch` → `IntrinsicHeight` +
+  `CrossAxisAlignment.stretch`); rate tiles share the row equally.
+- Behaviour at 900 px: sidebar stays, both columns compress; plan
+  descriptions and footnotes wrap taller and the pane scrolls.
 
 ## Open questions
 
-_Things the artboard does not answer. Raise them rather than inventing an answer
-silently._
-
-- [ ]
+- [ ] "Manage portfolio", "Change", team management and switching to the 5%
+  plan have no artboard targets — left inert.
+- [ ] Toggle state persistence is out of scope — values reset to the
+  artboard's on/on/on/on/off on rebuild.
+- [ ] The team avatar person glyph is `#FFFFFF` at `opacity:0.92` (artboard
+  line 82) — rendered as `AxColors.surface.withValues(alpha: 0.92)`.
+- [ ] `AxPlanCard`'s dash pattern (4 on / 4 off) is the shared widget's
+  approximation of `1.5px dashed #D7D1C2`.
 
 ## Acceptance criteria
 
-- [ ] Golden passes at the reference size
-- [ ] No overflow across the responsive matrix
-- [ ] No overflow at `textScaler: 1.3`
-- [ ] Every string from the copy inventory present, character for character
-- [ ] All icons are `AxIcons` / `AxArt`, no Material substitutes
-- [ ] No literal colours or font sizes outside `design/tokens/`
+- [x] Golden passes at the reference size
+- [x] No overflow across the responsive matrix
+- [x] No overflow at `textScaler: 1.3`
+- [x] Every string from the copy inventory present, character for character
+- [x] All icons are `AxIcons` / `AxArt`, no Material substitutes
+- [x] No literal colours or font sizes outside `design/tokens/`
 - [ ] Layer-2 side-by-side reviewed and signed off

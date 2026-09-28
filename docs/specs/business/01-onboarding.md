@@ -139,68 +139,96 @@ height:44px; border-radius:9px; border:1px solid #E0DBCF; display:flex; align-it
 
 ## Purpose
 
-_One paragraph: what the user is doing on this screen, and what they can reach
-from it. Written from the product's point of view, not the layout's._
+A provider signs their business up to Appointex: they enter the business
+name, category and phone number, and upload a national ID or passport for
+verification. Continue steps the wizard forward; at the last step it hands
+the provider over to the business dashboard. The route sits outside
+`BizShell` — the artboard has no sidebar here.
 
 ## Components used
 
-_Which `Ax*` widgets this screen composes, and any screen-local widgets it needs.
-If a screen-local widget here also appears on another screen, promote it to
-`design/widgets/` and note that here._
-
-- [ ] `AxMobileHeader`
-- [ ] …
+- `AxLabeledField` / `AxFieldLabel` / `AxField.desktop` (44 px) — name and
+  phone fields, placeholder `#9A9A9A`
+- `AxDuoIcon(AxDuoIcons.logoMark)` — 30 px brand lockup
+- `AxIcon` — `chevronDown` (12), `image` (18)
+- Screen-local (single use, Tier 3): `_JoinCard`, `_Stepper`,
+  `_CategorySelect` (static select; opening the list is Phase 4),
+  `_UploadBox` + `_DashedBorderPainter` (CSS `1.5px dashed #D7D1C2` has no
+  Flutter primitive — painted as a 4.5/4.5 dash cycle),
+  `_ContinueButton` (48-high stadium, 14/700 label — the artboard's inline
+  control, *not* `.btn` 50/25/15, so `AxPrimaryButton` does not apply),
+  `_Blob` (radial decorations)
+- `AxGradients.onboardingHero` / `.logo` / `.avatarPeach`
 
 ## Data model
 
-_The fixture shape this screen reads. Name the model classes and the fixture
-constant. The copy inventory above is the source of the values._
-
 ```dart
-// lib/features/<row>/<feature>/data/fixtures.dart
+// lib/features/business/onboarding/data/fixtures.dart
+const String kBrandLine;            // 'Appointex for Business'
+const String kHeading;              // 'Join Appointex'
+const String kSubheading;           // 'Free to join. You only pay when a booking happens.'
+const List<String> kStepLabels;     // ['Details', 'Verify', 'Services']
+const String kNameFieldLabel;       // 'Business or provider name'
+const String kNameFieldHint;       // 'e.g. Patricia Glam Studio'
+const String kCategoryFieldLabel;   // 'Category'
+const String kCategoryFieldValue;  // 'Makeup'
+const String kCategoryFieldHelper; // 'Independent stylists …'
+const String kPhoneFieldLabel;      // 'Phone number'
+const String kPhoneFieldHint;       // '+256 7…'
+const String kVerificationFieldLabel; // 'Identity verification'
+const String kVerificationFieldHint; // 'Upload national ID or passport'
+const String kContinueLabel;        // 'Continue'
 ```
 
 ## Interactions & states
 
-The artboards are static frames, so everything in this section is an extension
-of the design rather than a transcription of it. Decide it deliberately.
-
 | Element | Interaction | Result |
 |---|---|---|
-| | | |
+| Continue button | tap | advances the stepper (1 → 2 → 3); on step 3 navigates to `/biz/dashboard` |
+| Name / phone fields | typing | entered text renders `#3A3A3A` (docs/04 §AxField extension) |
+| Category select | tap | none in this port — dropdown is Phase 4 |
+| Upload box | tap | none in this port — file picker is Phase 4 |
 
-**States not in the artboard** — specify each, or explicitly say "out of scope":
+**States not in the artboard**
 
-- Loading:
-- Empty:
-- Error:
-- Pressed / hover:
-- Disabled:
+- Loading: out of scope (no backend).
+- Empty: n/a (static wizard content).
+- Error: out of scope; field validation is Phase 4.
+- Pressed / hover: Phase 4.
+- Disabled: Continue is never disabled in this port; validation gating is Phase 4.
 
 ## Responsive notes
 
-_Per-screen deviations from [03-RESPONSIVE-RULES.md](../../03-RESPONSIVE-RULES.md).
-Which fixed dimensions were kept and why; which became flexible; where the
-scroll boundary sits._
-
-- Scroll region:
-- Kept fixed:
-- Made flexible:
-- Behaviour at 320 px / 900 px:
+- Scroll region: the root `Stack`'s `SingleChildScrollView` wrapping the
+  centered card (Rule 3) — the card scrolls when it cannot fit the viewport
+  height.
+- Kept fixed: card width 460 (Rule 5, intrinsic form card), blob sizes and
+  negative offsets (Rule 10, clipped by the Stack), 22 px stepper dots,
+  48 px button.
+- Made flexible: root `width`/`height`/`overflow` dropped (Rule 1); card
+  height is content-driven; the two blobs are background, not scroll content.
+- Behaviour at 900 px: the card simply centers in the narrower gradient; this
+  route has no shell, so the 900 px "larger screen" rule does not apply.
+- The artboard's card `box-shadow: 0 18px 40px rgba(27,42,74,0.1)` is
+  omitted — the project bans shadows and no token exists for that value.
+- The artboard's 14 px sizes render via `AxType.body` (14.5), per docs/01's
+  "14.5 / 14" bucket for `.head` section text.
 
 ## Open questions
 
-_Things the artboard does not answer. Raise them rather than inventing an answer
-silently._
-
-- [ ]
+- [ ] Steps 2 (Verify) and 3 (Services) have no artboard content. The flow
+  keeps the step-1 card and only advances the stepper; step bodies need
+  design input.
+- [ ] Category list contents — only the value 'Makeup' exists in the artboard.
+- [ ] Entered data lives in screen-local state only; no draft persistence
+  specified.
 
 ## Acceptance criteria
 
-- [ ] Golden passes at the reference size
-- [ ] No overflow across the responsive matrix
-- [ ] No overflow at `textScaler: 1.3`
-- [ ] Every string from the copy inventory present, character for character
-- [ ] All icons are `AxIcons` / `AxArt`, no Material substitutes
-- [ ] No literal colours or font sizes outside `design/tokens/`
+- [x] Golden passes at the reference size
+- [x] No overflow across the responsive matrix
+- [x] No overflow at `textScaler: 1.3`
+- [x] Every string from the copy inventory present, character for character
+- [x] All icons are `AxIcons` / `AxArt`, no Material substitutes
+- [x] No literal colours or font sizes outside `design/tokens/`
 - [ ] Layer-2 side-by-side reviewed and signed off

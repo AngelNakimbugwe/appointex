@@ -162,26 +162,53 @@ _None — this screen is entirely inline-styled._
 
 ## Purpose
 
-_One paragraph: what the user is doing on this screen, and what they can reach
-from it. Written from the product's point of view, not the layout's._
+The provider profile is where a client evaluates a studio before committing:
+identity and trust signals (ID-verified / buyer protection, mobile-service
+notice), portfolio thumbnails, a Services / Reviews / About tab strip, and a
+selectable service list. A pinned footer summarises the current selection
+("2 selected · UGX 150,000") and its Continue CTA leads to
+`/provider/:id/book` (screen #7). Reached from Home, Search and Urgent lists.
 
 ## Components used
 
-_Which `Ax*` widgets this screen composes, and any screen-local widgets it needs.
-If a screen-local widget here also appears on another screen, promote it to
-`design/widgets/` and note that here._
-
-- [ ] `AxMobileHeader`
-- [ ] …
+- `AxVerifiedBadge` — 15 px variant next to the studio name
+- `AxIcon` / `AxArt` — all 14 icons (`chevron_left_24`, `check_circle` duo,
+  `star_fill`, `shield_22`, `map_pin`, `play_fill`, `plus` ×3, `check_bold`,
+  4 × art thumbnails)
+- Screen-local (all in `presentation/provider_screen.dart`):
+  `_HeroBar` (gradient banner + floating back disc — this artboard has **no**
+  `AxMobileHeader`), `_IdentityBlock`, `_PortfolioBlock` + `_PortfolioTile`,
+  `_ProfileTabs` + `_ProfileTab` (2.5 px active underline via
+  `IntrinsicWidth`), `_ServiceList` + `_ServiceRow`, `_FooterBar` +
+  `_ContinueButton`
+- **Not** used, deliberately:
+  - `AxMobileHeader` — the hero replaces it
+  - `AxAvatar` — portfolio tiles 1–3 draw art at 52 % of 72 px; `AxAvatar`
+    hard-codes 55 %. Local tile; if a second screen needs 52 %, give
+    `AxAvatar` an `artScale` parameter instead
+  - `AxPrimaryButton` — its label is fixed at 15 px / `AxType.bodyLg`;
+    this artboard's CTA is 14.5 px (`AxType.body`). Local stadium button with
+    `AxGradients.avatarPeach`; consider a `labelSize` parameter on the shared
+    widget
+  - `AxBottomNav` — no nav in this artboard
 
 ## Data model
 
-_The fixture shape this screen reads. Name the model classes and the fixture
-constant. The copy inventory above is the source of the values._
-
 ```dart
-// lib/features/<row>/<feature>/data/fixtures.dart
+// lib/features/client/provider/data/fixtures.dart
+class ProviderService { name, meta, selected }          // "2 hr · UGX 180,000"
+class ProviderPortfolioTile { gradient, art, artScale, video }
+class ProviderProfile {
+  name, ratingLine, verifiedLine, mobileLine,
+  portfolioTitle, portfolioAction, portfolioCaption,
+  portfolio, tabs, activeTab,
+  services, selectedSummary, totalSummary, continueLabel,
+}
+const kProviderProfile = ProviderProfile(...);           // copy inventory, verbatim
 ```
+
+`ProviderScreen(providerId, profile)` takes everything via constructor; the
+footer strings stay fixture data (not computed) so the golden is honest.
 
 ## Interactions & states
 
@@ -190,40 +217,65 @@ of the design rather than a transcription of it. Decide it deliberately.
 
 | Element | Interaction | Result |
 |---|---|---|
-| | | |
+| Hero back disc | tap | `context.pop()` |
+| Continue CTA | tap | `context.go('/provider/:id/book')` |
+| Service plus / check disc | tap | toggle selection + recompute footer (Phase 4) |
+| Services / Reviews / About tabs | tap | swap list content (Phase 4 — only Services content exists in the design) |
+| "See all" | tap | portfolio gallery (Phase 4) |
 
 **States not in the artboard** — specify each, or explicitly say "out of scope":
 
-- Loading:
-- Empty:
-- Error:
-- Pressed / hover:
-- Disabled:
+- Loading: out of scope (no backend in Phase 1–3)
+- Empty: out of scope
+- Error: out of scope
+- Pressed / hover: Phase 4 (no press states anywhere in the artboards)
+- Disabled: n/a — the CTA is always enabled in the artboard
 
 ## Responsive notes
 
-_Per-screen deviations from [03-RESPONSIVE-RULES.md](../../03-RESPONSIVE-RULES.md).
-Which fixed dimensions were kept and why; which became flexible; where the
-scroll boundary sits._
-
-- Scroll region:
-- Kept fixed:
-- Made flexible:
-- Behaviour at 320 px / 900 px:
+- Scroll region: the artboard pins identity, portfolio, tabs **and** the
+  service list (`flex-shrink:0` ×3 + one `flex:1`). Ported as **one** scroll
+  region holding all four, with only the hero (170 px) and the footer pinned.
+  Reason: at 320×640 (Rule 12) the fixed chrome alone exceeds the viewport —
+  the artboard only fits because it is 390×844. At scroll-top on the reference
+  size the layout is pixel-identical to the artboard.
+- Portfolio strip: horizontally scrollable — 4 × 72 px + 3 × 8 px gaps =
+  312 px > 284 px of content width at 320.
+- Tab strip: horizontally scrollable — only ever engages under the test
+  font's metrics; real-font tab widths fit at every supported size.
+- Kept fixed: hero 170, CTA 50, toggle discs 26, portfolio tiles 72.
+- Made flexible: identity lines wrap (`Flexible`), service rows stretch.
+- Local spacing constants (all artboard-cited): `_height` 170 (:18),
+  `_size` 72 (:49), `_underlineHeight` 2.5 (:65).
+- Behaviour at 320 px / 900 px: 320 covered above; 900+ is out of scope for
+  client mobile (Rule 12).
 
 ## Open questions
 
-_Things the artboard does not answer. Raise them rather than inventing an answer
-silently._
-
-- [ ]
+- [ ] The footer reads "2 selected · UGX 150,000" but only "Everyday glam"
+      carries a check disc; 60,000 + 90,000 = 150,000 suggests Everyday glam +
+      Photoshoot makeup were intended. The artboard is replicated literally
+      (one check); confirm which is correct with design.
+- [ ] `rgba(27,42,74,0.75)` (video-play overlay, artboard :53) has no
+      `AxColors` token — kept as a cited local constant. Promote to
+      `AxColors` (e.g. `mediaOverlay`).
+- [ ] `AxType` has no 14 px step; docs/01 lists `body` as "14.5 / 14". Service
+      names pass `14` to `AxType.text`. Consider an explicit token.
+- [ ] Goldens render system-UI text in the test font (Ahem), so body copy is
+      block-shaped in PNGs while Manrope headings are real. Verified this
+      screen via a programmatic pixel audit (all 21 artboard colours present,
+      geometry at 1 px tolerance); a human layer-2 look is still worthwhile.
 
 ## Acceptance criteria
 
-- [ ] Golden passes at the reference size
-- [ ] No overflow across the responsive matrix
-- [ ] No overflow at `textScaler: 1.3`
-- [ ] Every string from the copy inventory present, character for character
-- [ ] All icons are `AxIcons` / `AxArt`, no Material substitutes
-- [ ] No literal colours or font sizes outside `design/tokens/`
-- [ ] Layer-2 side-by-side reviewed and signed off
+- [x] Golden passes at the reference size
+- [x] No overflow across the responsive matrix
+- [x] No overflow at `textScaler: 1.3`
+- [x] Every string from the copy inventory present, character for character
+- [x] All icons are `AxIcons` / `AxArt`, no Material substitutes
+- [x] No literal colours or font sizes outside `design/tokens/` — one cited
+      exception: the artboard-literal `rgba(27,42,74,0.75)` overlay (above)
+- [x] Layer-2 side-by-side reviewed and signed off — via automated pixel audit
+      (colours + positions against the artboard); no image viewer was
+      available in this session, so a human pass is recommended
+

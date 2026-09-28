@@ -82,22 +82,24 @@ class _BrandBlock extends StatelessWidget {
           alignment: Alignment.center,
           child: const AxDuoIcon(AxDuoIcons.logoMark, size: 16),
         ),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Appointex',
-              style: AxType.head(AxType.label,
-                  weight: FontWeight.w800, color: AxColors.brand),
-            ),
-            Text(
-              'FOR BUSINESS',
-              style: AxType.text(AxType.nanoSm,
-                  weight: FontWeight.w700,
-                  color: AxColors.brandMid,
-                  letterSpacingEm: 0.05),
-            ),
-          ],
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Appointex',
+                style: AxType.head(AxType.label,
+                    weight: FontWeight.w800, color: AxColors.brand),
+              ),
+              Text(
+                'FOR BUSINESS',
+                style: AxType.text(AxType.nanoSm,
+                    weight: FontWeight.w700,
+                    color: AxColors.brandMid,
+                    letterSpacingEm: 0.05),
+              ),
+            ],
+          ),
         ),
       ],
     );

@@ -18,20 +18,30 @@ class AxAvatar extends StatelessWidget {
     this.art,
     this.gradient,
     this.child,
+    this.artScale = 0.55,
+    this.imageAsset,
   });
 
   final double size;
   final double radius;
 
-  /// Decorative art asset (`AxIcons.art*`). Drawn at 55% of the box — the
-  /// artboards use 52–55% depending on context; pass [child] for exact control.
+  /// Decorative art asset (`AxIcons.art*`). Drawn at [artScale] × the box —
+  /// the artboards use 52–55% depending on context; pass [child] for exact
+  /// control.
   final String? art;
+
+  /// Fraction of the box the art occupies, 0–1. Artboards use 0.52–0.55.
+  final double artScale;
 
   /// One of `AxGradients.avatars`. Defaults to the first of the rotation.
   final Gradient? gradient;
 
   /// Fully custom box content; overrides [art].
   final Widget? child;
+
+  /// A real bundled photo (`assets/images/*`). Takes priority over [art] and
+  /// [child] — fills the box with `BoxFit.cover`, clipped to [radius].
+  final String? imageAsset;
 
   /// Picks the avatar gradient for a provider id by stable hash, so a given
   /// provider always renders the same gradient (docs/01 § Gradients).
@@ -46,7 +56,18 @@ class AxAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final artScale = size * 0.55;
+    if (imageAsset != null) {
+      return ClipRRect(
+        borderRadius: BorderRadius.all(Radius.circular(radius)),
+        child: Image.asset(
+          imageAsset!,
+          width: size,
+          height: size,
+          fit: BoxFit.cover,
+        ),
+      );
+    }
+    final scaledArt = size * artScale;
     return Container(
       width: size,
       height: size,
@@ -56,10 +77,10 @@ class AxAvatar extends StatelessWidget {
       ),
       child: Center(
         child: SizedBox(
-          width: artScale,
-          height: artScale,
+          width: scaledArt,
+          height: scaledArt,
           child: child ??
-              (art == null ? null : AxArt(art!, size: artScale)),
+              (art == null ? null : AxArt(art!, size: scaledArt)),
         ),
       ),
     );

@@ -209,68 +209,100 @@ display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px so
 
 ## Purpose
 
-_One paragraph: what the user is doing on this screen, and what they can reach
-from it. Written from the product's point of view, not the layout's._
+The provider's advertising screen. It shows who currently holds the top-3
+featured spots in their category (the provider themselves holds #3, with 6
+days left, auto-renewing), then lets them buy into that placement — a 1-week
+or 1-month category slot (the month is highlighted as the better deal) — or a
+rotating Home-banner carousel slot. Both products carry the paid-placement
+disclosure so providers know clients see them marked as ads.
 
 ## Components used
 
-_Which `Ax*` widgets this screen composes, and any screen-local widgets it needs.
-If a screen-local widget here also appears on another screen, promote it to
-`design/widgets/` and note that here._
-
-- [ ] `AxMobileHeader`
-- [ ] …
+- `BizShell` — `Scaffold(body: BizShell(current: AxSidebarItem.featured, …))`
+- `AxSidebarItem` routing via `context.go` to the `AxRoutes.biz*` paths
+- `AxAvatar` — the three rank rows: 30 px, radius 8, `artScale` 0.52,
+  gradients `avatarBlush` / `avatarPale` / `avatarSand` (artboard lines
+  74/80/86), art `artNails` / `artSpa` / `artMakeup`
+- `AxPrimaryButton` — the three compact CTAs (height 32, label 11.5): two
+  `outline` (week tier, carousel) and one `gradient` (month tier); radius 16
+  on 32 is a stadium, which `StadiumBorder` gives exactly
+- `AxIcon` — `starOutline` 22 `#FEC89A` in the renewal banner
+- Screen-local: `_PageHeader`, `_CurrentSpotsCard`, `_SpotsTakenPill`,
+  `_FeaturedRow`, `_FeaturedBanner`, `_AdvertiseColumn`, `_Eyebrow`,
+  `_TierCard`, `_CarouselCard`
+- `AxTierCard` is *not* used directly: both `.tier` instances override the
+  class defaults to `padding:12px 16px; gap:5px` (artboard lines 105/110),
+  which the shared widget hard-codes at `16 18` / gap 8 and cannot take as
+  parameters. `_TierCard` mirrors `AxTierCard`'s styles otherwise (radius 14,
+  10.5/700 `0.04em` eyebrow — `#A66A5D` when selected, 17/800 price, salmon
+  border + `#F9DCC4` background when selected).
+- `AxDataTable` is *not* used — the "Currently featured" list has no `.th`
+  header row; the rows are custom (`10px 0` padding, `#F1EEE6` separators,
+  none on the last row), matching `.row`.
 
 ## Data model
 
-_The fixture shape this screen reads. Name the model classes and the fixture
-constant. The copy inventory above is the source of the values._
-
 ```dart
-// lib/features/<row>/<feature>/data/fixtures.dart
+// lib/features/business/featured_spots/data/fixtures.dart
+class FeaturedSpot {
+  final String rank, name, daysLeft;
+  final Color rankColor;          // #FFB5A7 / #C9A79D / #F0EEE9 by rank
+  final Gradient gradient;        // avatar gradient, artboard lines 74/80/86
+  final String art;               // AxArt.artNails / artSpa / artMakeup
+  final bool daysLeftHighlight;   // true only for "(you)" — #2E8B57, 700
+}
+const List<FeaturedSpot> kFeaturedSpots;   // 3 rows
+const String kPageTitle, kPageSubtitle, kCurrentTitle, kSpotsTakenPill;
+const String kBannerTitle, kBannerBody;
+const String kAdvertiseTitle, kPlacementEyebrow, kBannerAdEyebrow;
+const String kWeekLabel, kWeekPrice, kMonthLabel, kMonthPrice, kChoose;
+const String kCarouselTitle, kCarouselPrice, kCarouselDescription, kGetASlot;
+const String kPaidDisclosure;
 ```
 
 ## Interactions & states
 
-The artboards are static frames, so everything in this section is an extension
-of the design rather than a transcription of it. Decide it deliberately.
-
 | Element | Interaction | Result |
 |---|---|---|
-| | | |
+| Sidebar rows | tap | `context.go` to the matching `/biz/*` route |
+| "Choose" ×2, "Get a slot" | tap | inert — purchase flow has no artboard target |
 
-**States not in the artboard** — specify each, or explicitly say "out of scope":
+**States not in the artboard**
 
-- Loading:
-- Empty:
-- Error:
-- Pressed / hover:
-- Disabled:
+- Loading: Phase 4.
+- Empty (spots available / not currently featured): out of scope — the
+  artboard only draws the all-taken state ("3 of 3 spots taken" is fixed copy).
+- Error: out of scope.
+- Pressed / hover: none.
+- Disabled: n/a.
 
 ## Responsive notes
 
-_Per-screen deviations from [03-RESPONSIVE-RULES.md](../../03-RESPONSIVE-RULES.md).
-Which fixed dimensions were kept and why; which became flexible; where the
-scroll boundary sits._
-
-- Scroll region:
-- Kept fixed:
-- Made flexible:
-- Behaviour at 320 px / 900 px:
+- Scroll region: `BizShell`'s content pane (Rule 3). The two-column body is
+  an `Expanded` like the artboard's `flex:1` row, so it fills the pane at the
+  reference size and scrolls when taller (large text scale).
+- Kept fixed: 22 px rank circles, 30 px avatars, 22 px banner star, 32 px CTA
+  heights, `1.5px` CTA borders.
+- Made flexible: left/right columns at flex 13:10 (artboard `flex:1.3` / `1`),
+  gap 20; all cards stretch full width. At 1440 the pane grows and the
+  columns stretch with it (no table here to max-width at 1160).
+- Behaviour at 900 px: sidebar stays, both columns compress; tier cards keep
+  their `12 16` padding and the copy wraps.
 
 ## Open questions
 
-_Things the artboard does not answer. Raise them rather than inventing an answer
-silently._
-
-- [ ]
+- [ ] The "Choose" / "Get a slot" CTAs have no target — left inert. Where
+  does purchase confirmation go?
+- [ ] The banner says renewal is turned off "in Settings", but Biz_Settings
+  draws no such control — copy only, no wired behaviour.
+- [ ] "3 of 3 spots taken" is static copy; no free-spot state exists to port.
 
 ## Acceptance criteria
 
-- [ ] Golden passes at the reference size
-- [ ] No overflow across the responsive matrix
-- [ ] No overflow at `textScaler: 1.3`
-- [ ] Every string from the copy inventory present, character for character
-- [ ] All icons are `AxIcons` / `AxArt`, no Material substitutes
-- [ ] No literal colours or font sizes outside `design/tokens/`
+- [x] Golden passes at the reference size
+- [x] No overflow across the responsive matrix
+- [x] No overflow at `textScaler: 1.3`
+- [x] Every string from the copy inventory present, character for character
+- [x] All icons are `AxIcons` / `AxArt`, no Material substitutes
+- [x] No literal colours or font sizes outside `design/tokens/`
 - [ ] Layer-2 side-by-side reviewed and signed off

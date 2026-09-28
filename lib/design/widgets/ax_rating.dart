@@ -20,9 +20,12 @@ class AxRating extends StatelessWidget {
       spacing: AxSpace.s4,
       children: [
         const AxIcon(AxIcons.starFill, size: 12, color: AxColors.brandMid),
-        Text(
-          value,
-          style: AxType.text(AxType.captionSm, color: AxColors.textBody),
+        Flexible(
+          child: Text(
+            value,
+            overflow: TextOverflow.ellipsis,
+            style: AxType.text(AxType.captionSm, color: AxColors.textBody),
+          ),
         ),
       ],
     );

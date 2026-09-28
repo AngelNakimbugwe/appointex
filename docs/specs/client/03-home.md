@@ -200,68 +200,72 @@ display:flex; flex-direction:column; align-items:center; gap:4px; flex:1;
 
 ## Purpose
 
-_One paragraph: what the user is doing on this screen, and what they can reach
-from it. Written from the product's point of view, not the layout's._
+The client's landing tab. Greets the user with location context ("Good morning / Where to today?" + Kampala pill), routes them into search, surfaces a promo carousel, a category browse grid, an urgent-booking banner, and two featured providers. Everything except the header, search bar and bottom nav scrolls.
 
 ## Components used
 
-_Which `Ax*` widgets this screen composes, and any screen-local widgets it needs.
-If a screen-local widget here also appears on another screen, promote it to
-`design/widgets/` and note that here._
-
-- [ ] `AxMobileHeader`
-- [ ] …
+- [x] `AxMobileHeader.home` — greeting block, location pill and bell passed as `actions`
+- [x] `AxBottomNav` — in `Scaffold.bottomNavigationBar`, wrapped in `MediaQuery.withClampedTextScaling(1.2)` per Rule 13
+- [x] `AxAvatar` — carousel (44/r10) and provider rows (56/r10) via the local row below
+- [x] `AxVerifiedBadge`, `AxIcon` — direct
+- [ ] `AxProviderRow` / `AxRating` — **not used; local fork instead** (see Open questions)
+- Screen-local widgets in `presentation/widgets/`: `HomeCarousel` (full-width snap pages + tracking dots + AD badge), `HomeCategoryGrid` (3-across `Row` of `Expanded` per Rule 6, last cell is the gradient event tile), `HomeUrgentBanner`, `FeaturedProviderRow`
 
 ## Data model
 
-_The fixture shape this screen reads. Name the model classes and the fixture
-constant. The copy inventory above is the source of the values._
+`lib/features/client/home/data/fixtures.dart` — plain const model classes, no Riverpod yet:
 
-```dart
-// lib/features/<row>/<feature>/data/fixtures.dart
-```
+- `HomePromo` → `kHomePromos` (badge, title, subtitle, cta, avatarArt, avatarGradient)
+- `HomeCategory` → `kHomeCategories` (label, icon, background, iconColor, labelColor — the documented category colour sets)
+- `HomeProvider` → `kHomeFeaturedProviders` (id, name, subtitle, rating, avatarArt, avatarGradient, `avatarArtScale` — 0.55 for Grace / 0.52 for Patricia, artboard lines 110/121)
+- Plain strings: `kHomeGreeting`, `kHomeTitle`, `kHomeLocation`, `kHomeSearchPlaceholder`, `kHomeCategoriesHeading`, `kHomeEventTileLabel` (`'Plan an\nevent'`), `kHomeUrgentTitle`, `kHomeUrgentSubtitle`, `kHomeFeaturedHeading`, `kHomeSeeAll`
 
 ## Interactions & states
 
-The artboards are static frames, so everything in this section is an extension
-of the design rather than a transcription of it. Decide it deliberately.
-
 | Element | Interaction | Result |
 |---|---|---|
-| | | |
+| Search bar | tap | `context.go('/search')` |
+| Urgent banner | tap | `context.go('/home/urgent')` |
+| Event tile ("Plan an event") | tap | `context.go('/event')` |
+| Featured provider rows | tap | `context.go('/provider/:id')` (`grace-nabbosa`, `patricia-glam`) |
+| "See all" | tap | `context.go('/search')` |
+| Bottom nav | tap | Home `/home`, Bookings `/bookings`, Chat `/chat`, Profile `/profile` |
 
-**States not in the artboard** — specify each, or explicitly say "out of scope":
+Not wired (no destination specified in the design — Phase 4): location pill, bell, carousel card, the five category tiles.
 
-- Loading:
-- Empty:
-- Error:
-- Pressed / hover:
-- Disabled:
+**States not in the artboard** — the artboards are static frames:
+
+- Loading: out of scope (fixtures only; no repository yet)
+- Empty: out of scope
+- Error: out of scope
+- Pressed / hover: Phase 4 (design has no pressed states; theme already strips ripples)
+- Disabled: out of scope
 
 ## Responsive notes
 
-_Per-screen deviations from [03-RESPONSIVE-RULES.md](../../03-RESPONSIVE-RULES.md).
-Which fixed dimensions were kept and why; which became flexible; where the
-scroll boundary sits._
-
-- Scroll region:
-- Kept fixed:
-- Made flexible:
-- Behaviour at 320 px / 900 px:
+- Scroll region: `Expanded > SingleChildScrollView` holding carousel, categories, urgent banner, featured list with the artboard's 22px section gap. Header block + search bar and bottom nav stay fixed (Rule 3).
+- Kept fixed (intrinsic, Rule 4/5): carousel height 112, banner icon box 34, dots 16/6/6, avatar sizes. (The card itself is now flexible — see the deviation note below.)
+- Made flexible: category grid = `Row`s of `Expanded` inside `IntrinsicHeight` (Rule 6) so "Spa & massage" wraps to two lines and stretches its row; search bar, banner, rows and carousel cards stretch full width; every section except the carousel carries the 20px horizontal padding — the carousel's `PageView` carries its own edge padding (Rule 7).
+- At 320px / 1.3 textScaler: names and labels wrap, tiles grow — no overflow (verified in the matrix test).
+- **Deliberate product deviation (post-artboard call):** the carousel is now a snapping `PageView` of **full-width cards** (viewport minus the 20px page padding) that **auto-advances every 2 s** (wrapping around, rescheduling on any manual interaction, skipping a tick while a scroll is in flight) with dots that track and jump to pages. This replaces the artboard's static 300px card + 40px peek teaser (Client_Home.dc.html lines 48-49, 59); the golden was regenerated accordingly and no longer matches those two lines. Fixture note: the artboard supplies copy for one promo only, so it rotates through all three dot-slots (`kHomeCarouselPromos`) until real campaign data exists.
+- Urgent banner's 120deg gradient uses `AxGradients.urgent` (Rule 9 shallow-diagonal approximation, decided in tokens).
+- Local non-token constants, each citing the artboard line: location pill radius 20 (line 26), AD badge radius 6 (line 44), urgent title/subtitle gap 1 (line 97).
 
 ## Open questions
 
-_Things the artboard does not answer. Raise them rather than inventing an answer
-silently._
-
-- [ ]
+- [ ] `AxRating`'s text is not in a `Flexible`, so its min-size `Row` overflows (2.8px at 390×1.0, 75px at 1.3 under the test font) — the shared widget needs the same treatment as `AxProviderRow`'s name. Until then this screen uses a local `FeaturedProviderRow` that mirrors `AxProviderRow.standard` exactly but ellipsizes the rating line. Delete the local row once `AxRating`/`AxProviderRow` are fixed.
+- [ ] The artboard's featured rows carry **no** AD badge, so the standard (not `.featured`) row variant is the faithful one — the `.featured` constructor appears to target other screens. Confirm.
+- [ ] `AxAvatar` draws art at a fixed 55%; artboard line 121 draws Patricia's art at 52%. The local row honours the per-provider scale; the shared widget should grow a scale/child parameter before `AxProviderRow` can be reused here.
+- [ ] `pubspec.yaml` asset entry `- assets/icons/` bundles nothing — Flutter directory entries are non-recursive, so `assets/icons/ui|duo|art/` were added (report to lead; docs/05 guidance needs updating).
+- [ ] Destinations for location pill, bell, carousel cards and category tiles are unspecified in the design.
+- [ ] The test environment's fallback font (Ahem, 1em advance) renders body copy as boxes and wraps strings a real font would not; goldens are deterministic but text-shape comparison needs the real font (CI / Layer-2 review).
 
 ## Acceptance criteria
 
-- [ ] Golden passes at the reference size
-- [ ] No overflow across the responsive matrix
-- [ ] No overflow at `textScaler: 1.3`
-- [ ] Every string from the copy inventory present, character for character
-- [ ] All icons are `AxIcons` / `AxArt`, no Material substitutes
-- [ ] No literal colours or font sizes outside `design/tokens/`
-- [ ] Layer-2 side-by-side reviewed and signed off
+- [x] Golden passes at the reference size
+- [x] No overflow across the responsive matrix
+- [x] No overflow at `textScaler: 1.3`
+- [x] Every string from the copy inventory present, character for character
+- [x] All icons are `AxIcons` / `AxArt`, no Material substitutes
+- [x] No literal colours or font sizes outside `design/tokens/`
+- [x] Layer-2 side-by-side reviewed — verified programmatically (widget-geometry probe + ~70 pixel samples against artboard literals: all backgrounds, gradients incl. the decor-circle and peek blends, borders, dots, glyph and icon colours match); model cannot view images, so human eyeball sign-off is still pending

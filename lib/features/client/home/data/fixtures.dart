@@ -12,6 +12,7 @@ class HomePromo {
     required this.cta,
     required this.avatarArt,
     required this.avatarGradient,
+    this.imageAsset,
   });
 
   final String badge;
@@ -20,6 +21,9 @@ class HomePromo {
   final String cta;
   final String avatarArt;
   final Gradient avatarGradient;
+
+  /// A real photo (`assets/images/*`) shown instead of [avatarArt] when set.
+  final String? imageAsset;
 }
 
 class HomeCategory {
@@ -46,6 +50,8 @@ class HomeProvider {
     required this.rating,
     this.avatarArt,
     this.avatarGradient,
+    this.avatarArtScale = 0.55,
+    this.imageAsset,
   });
 
   final String id;
@@ -54,23 +60,58 @@ class HomeProvider {
   final String rating;
   final String? avatarArt;
   final Gradient? avatarGradient;
+  final double avatarArtScale;
+
+  /// A real photo (`assets/images/*`) shown instead of [avatarArt] when set.
+  final String? imageAsset;
 }
 
-const kHomeGreeting = 'Good morning';
+/// Time-of-day greeting — morning/afternoon/evening cutoffs at 12:00/17:00.
+String homeGreeting([DateTime? now]) {
+  final hour = (now ?? DateTime.now()).hour;
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  return 'Good evening';
+}
 const kHomeTitle = 'Where to today?';
 const kHomeLocation = 'Kampala';
 const kHomeSearchPlaceholder = 'Search stylists, makeup artists, spas…';
 
-const kHomePromos = [
-  HomePromo(
-    badge: 'AD',
-    title: 'Grace Nabbosa Braids',
-    subtitle: '20% off box braids this week',
-    cta: 'Book now →',
-    avatarArt: AxArt.artBraids,
-    avatarGradient: AxGradients.avatarBlush,
-  ),
-];
+const HomePromo _kGracePromo = HomePromo(
+  badge: 'AD',
+  title: 'Grace Nabbosa Braids',
+  subtitle: '20% off box braids this week',
+  cta: 'Book now →',
+  avatarArt: AxArt.artBraids,
+  avatarGradient: AxGradients.avatarBlush,
+  imageAsset: 'assets/images/hair_braids_1.jpg',
+);
+
+const HomePromo _kPatriciaPromo = HomePromo(
+  badge: 'AD',
+  title: 'Patricia Glam Studio',
+  subtitle: 'New client special: 15% off full glam',
+  cta: 'Book now →',
+  avatarArt: AxArt.artMakeup,
+  avatarGradient: AxGradients.avatarSand,
+  imageAsset: 'assets/images/portrait_2.jpg',
+);
+
+const HomePromo _kSandraPromo = HomePromo(
+  badge: 'AD',
+  title: 'Glow by Sandra',
+  subtitle: 'Book a spa day, bring a friend free',
+  cta: 'Book now →',
+  avatarArt: AxArt.artSpa,
+  avatarGradient: AxGradients.avatarPale,
+  imageAsset: 'assets/images/portrait_4.jpg',
+);
+
+const kHomePromos = [_kGracePromo];
+
+/// Three distinct campaign slides for the three indicator dots
+/// (Client_Home.dc.html lines 60-63).
+const kHomeCarouselPromos = [_kGracePromo, _kPatriciaPromo, _kSandraPromo];
 
 const kHomeCategoriesHeading = 'Browse by category';
 
@@ -128,6 +169,8 @@ const kHomeFeaturedProviders = [
     rating: '4.9 · from UGX 25,000',
     avatarArt: AxArt.artBraids,
     avatarGradient: AxGradients.avatarPale,
+    avatarArtScale: 0.55,
+    imageAsset: 'assets/images/hair_braids_1.jpg',
   ),
   HomeProvider(
     id: 'patricia-glam',
@@ -136,5 +179,7 @@ const kHomeFeaturedProviders = [
     rating: '5.0 · from UGX 60,000',
     avatarArt: AxArt.artMakeup,
     avatarGradient: AxGradients.avatarSand,
+    avatarArtScale: 0.52,
+    imageAsset: 'assets/images/makeup_1.jpg',
   ),
 ];

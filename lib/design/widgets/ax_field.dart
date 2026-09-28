@@ -19,6 +19,7 @@ class AxField extends StatelessWidget {
     this.obscureText = false,
     this.desktop = false,
     this.onChanged,
+    this.trailing,
   });
 
   final TextEditingController? controller;
@@ -29,6 +30,13 @@ class AxField extends StatelessWidget {
   /// Desktop variant: 44 high, radius 9, font 13.
   final bool desktop;
   final ValueChanged<String>? onChanged;
+
+  /// Trailing affordance inside the field's right edge (e.g. the password
+  /// preview eye). Rendered as the input's `suffixIcon` so typed text never
+  /// runs underneath it. It is wrapped in a tight 44×44 box — the suffix
+  /// slot's constraints are otherwise unbounded, which collapses the hint
+  /// text's layout width to zero.
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -52,6 +60,9 @@ class AxField extends StatelessWidget {
           filled: true,
           fillColor: AxColors.surface,
           contentPadding: const EdgeInsets.symmetric(horizontal: AxSpace.s14),
+          suffixIcon: trailing == null
+              ? null
+              : SizedBox(width: 44, height: 44, child: Center(child: trailing)),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.all(Radius.circular(radius)),
             borderSide: const BorderSide(color: AxColors.borderStrong),

@@ -106,26 +106,49 @@ max-width:78%; padding:10px 13px; border-radius:15px; font-size:13px; line-heigh
 
 ## Purpose
 
-_One paragraph: what the user is doing on this screen, and what they can reach
-from it. Written from the product's point of view, not the layout's._
+One chat thread between the client and a provider: the client negotiates a
+booking ("the 26th for bridal makeup"), hits the platform's contact-sharing
+block, and settles on booking in-app. The composer is the fixed surface at
+the keyboard-safe bottom; the message list scrolls above it. The Chat tab
+itself routes to the inbox (see below), which pushes this thread.
 
 ## Components used
 
-_Which `Ax*` widgets this screen composes, and any screen-local widgets it needs.
-If a screen-local widget here also appears on another screen, promote it to
-`design/widgets/` and note that here._
+- [x] `AxAvatar` — 34 px header avatar, `AxGradients.avatarBlush`, circular
+      (`radius: size / 2`), white `personFill` art at 55%
+- [x] `AxBottomNav` — `Scaffold.bottomNavigationBar`, Chat tab active
+- [x] `AxIcon` — `chevronLeft` 19, `lock` 13, `lock24` 11, `send` 16
+      (all five icons on screen, no Material substitutes)
+- [x] `AxSpace` / `AxType` / `AxColors` tokens
 
-- [ ] `AxMobileHeader`
-- [ ] …
+Screen-local widgets (Tier 3, stay in the feature):
+
+- `_ChatHeader` — the 60 px bar (back, avatar, name + presence). Local, not
+  `AxMobileHeader`, because the artboard's header is 60 px with a 34 px
+  avatar and a presence subline — a different shape than the standard bar.
+- `_MessageBubble` — `.bubble` (Tier 3): `ConstrainedBox` with
+  `constraints.maxWidth * 0.78`, padding 10/13, radius 15 with the 5 px
+  tail corner on the sender's side, system font 13/1.45
+- `_BlockedNotice` — the centred `#FBF3E7` escrow strip, max-width 88%
+- `_Composer` — note row + stadium input placeholder + circular send button
 
 ## Data model
 
-_The fixture shape this screen reads. Name the model classes and the fixture
-constant. The copy inventory above is the source of the values._
-
 ```dart
-// lib/features/<row>/<feature>/data/fixtures.dart
+// lib/features/client/chat/data/fixtures.dart
+class ChatEntry { text, outgoing, isNotice }  // message or system notice
+class ChatThread { id, name, presenceLabel, gradient, entries }
+const kChatThreads  // one thread: 'patricia-glam-studio' with 5 entries
 ```
+
+`ChatScreen` takes an optional `threadId` constructor arg and resolves it
+against `kChatThreads`, falling back to the first thread — the route builder
+for `/chat/:threadId` can pass `state.pathParameters['threadId']` straight
+through. Deliberate extension (documented gap): **`ChatInboxScreen`** at
+`presentation/chat_inbox_screen.dart` is the Chat tab root (`/chat`), a
+minimal token-only list of `kChatThreads` rows that navigates to
+`/chat/<thread.id>` on tap. It is not pixel-sourced (no artboard — BUILD_PLAN
+§Known gaps), so it has responsive tests but no golden.
 
 ## Interactions & states
 
@@ -134,40 +157,68 @@ of the design rather than a transcription of it. Decide it deliberately.
 
 | Element | Interaction | Result |
 |---|---|---|
-| | | |
+| Back arrow | tap | `context.pop()` |
+| Bottom nav | tap | `context.go` to /home, /bookings, /chat (inbox), /profile |
+| Inbox row | tap | `context.go('/chat/<threadId>')` |
+| Composer input | tap | **Phase 4** — real text field (currently the artboard's placeholder, matching the AxField empty-state convention) |
+| Send button | tap | **Phase 4** — sends a message |
+| Message list | scroll | scrolls; content starts top-down as drawn |
 
 **States not in the artboard** — specify each, or explicitly say "out of scope":
 
-- Loading:
-- Empty:
-- Error:
-- Pressed / hover:
-- Disabled:
+- Loading: out of scope (fixtures only, Phase 4)
+- Empty: out of scope (Phase 4)
+- Error: out of scope (Phase 4)
+- Pressed / hover: Phase 4
+- Disabled: n/a (send is decorative until Phase 4)
 
 ## Responsive notes
 
-_Per-screen deviations from [03-RESPONSIVE-RULES.md](../../03-RESPONSIVE-RULES.md).
+Per-screen deviations from [03-RESPONSIVE-RULES.md](../../03-RESPONSIVE-RULES.md).
 Which fixed dimensions were kept and why; which became flexible; where the
-scroll boundary sits._
+scroll boundary sits.
 
-- Scroll region:
-- Kept fixed:
-- Made flexible:
-- Behaviour at 320 px / 900 px:
+- Scroll region: `Expanded > SingleChildScrollView` for the messages only
+  (Rule 3); header and composer are fixed outside it, composer above the
+  `Scaffold.bottomNavigationBar` (keyboard handled by
+  `resizeToAvoidBottomInset`).
+- Kept fixed: 60 px header, 42 px composer field/send button (intrinsic
+  element sizes, survive 1.3 text scale — verified), 34 px avatar.
+- Made flexible: bubble widths up to 78% of the content column via
+  `LayoutBuilder` + `ConstrainedBox`; notice up to 88%; provider name
+  ellipsises in the header; the composer note wraps in `Expanded`.
+- The composer field renders `border-radius:21px` on height 42 as a
+  `StadiumBorder` (same reasoning as `AxPrimaryButton`).
+- Bubble/message alignment uses `AlignmentDirectional.centerStart/centerEnd`.
+- Behaviour at 320 px / 900 px: bubbles re-cap at 78% of the narrower column,
+  notice and note wrap to more lines. Verified at 320/390/430 and at
+  `textScaler` 1.3 — no overflow.
 
 ## Open questions
 
 _Things the artboard does not answer. Raise them rather than inventing an answer
 silently._
 
-- [ ]
+- [ ] The artboard has **no bottom nav** — the build instruction for this port
+      directed embedding `AxBottomNav` (Chat active) on both #11 and #12, so
+      it is present in the golden. Confirm this is the intended final state.
+- [ ] First bubble's wrapper carries class `bubble bg` (line 29) which would
+      literally double its padding; treated as a design-tool artifact — all
+      bubbles render one padding layer.
+- [ ] Alignment vs. dialogue roles: reading the copy, the left-aligned grey
+      bubbles are the client asking and the right-aligned brown bubble is the
+      provider answering — the opposite of the usual self-on-right convention
+      implied by the "Message Patricia…" composer. Ported literally as drawn;
+      the fixture's `outgoing` flag means right-aligned, not "mine".
+- [ ] Who authors the blocked notice (client attempt vs system insert) is not
+      drawn; modelled as a system entry in the thread fixture.
 
 ## Acceptance criteria
 
-- [ ] Golden passes at the reference size
-- [ ] No overflow across the responsive matrix
-- [ ] No overflow at `textScaler: 1.3`
-- [ ] Every string from the copy inventory present, character for character
-- [ ] All icons are `AxIcons` / `AxArt`, no Material substitutes
-- [ ] No literal colours or font sizes outside `design/tokens/`
+- [x] Golden passes at the reference size
+- [x] No overflow across the responsive matrix (thread and inbox)
+- [x] No overflow at `textScaler: 1.3`
+- [x] Every string from the copy inventory present, character for character
+- [x] All icons are `AxIcons` / `AxArt`, no Material substitutes
+- [x] No literal colours or font sizes outside `design/tokens/`
 - [ ] Layer-2 side-by-side reviewed and signed off

@@ -1,0 +1,21 @@
+const String kRegisterTitle = 'Create your account';
+const String kRegisterSubtitle = "Just a few details and you're ready to book.";
+const String kRegisterStepOne = 'Your details';
+const String kRegisterStepOneNumber = '1';
+const String kRegisterStepTwo = 'Verify phone';
+const String kRegisterStepTwoNumber = '2';
+const String kRegisterFullNameLabel = 'Full name';
+const String kRegisterFullNameHint = 'e.g. Aisha Kirabo';
+const String kRegisterPhoneLabel = 'Phone number';
+const String kRegisterPhoneHint = '+256 7…';
+const String kRegisterLegal =
+    "By creating an account you agree to Appointex's Terms of Service and Privacy Policy.";
+const String kRegisterCta = 'Create account';
+const String kRegisterGoogleCta = 'Continue with Google';
+const String kRegisterOtpTitle = 'Enter the 6-digit code';
+const String kRegisterOtpHint = '123456';
+const String kRegisterOtpCta = 'Verify & continue';
+const String kRegisterOtpResendPrompt = "Didn't get a code?";
+const String kRegisterOtpResendLink = 'Resend';
+const String kRegisterLoginPrompt = 'Already have an account?';
+const String kRegisterLoginLink = 'Log in';

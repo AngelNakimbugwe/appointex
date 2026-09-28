@@ -20,11 +20,19 @@ class AxPrimaryButton extends StatelessWidget {
     required this.label,
     this.onPressed,
     this.style = AxButtonStyle.gradient,
+    this.height = AxSpace.buttonHeight,
+    this.labelSize = AxType.bodyLg,
   });
 
   final String label;
   final VoidCallback? onPressed;
   final AxButtonStyle style;
+
+  /// Button height — 50 for `.btn`; some artboards use 48 with radius 24.
+  final double height;
+
+  /// Label font size — 15 for `.btn`; Register and Book use 14.5.
+  final double labelSize;
 
   @override
   Widget build(BuildContext context) {
@@ -58,12 +66,12 @@ class AxPrimaryButton extends StatelessWidget {
       child: Opacity(
         opacity: onPressed == null ? 0.5 : 1,
         child: Container(
-          height: AxSpace.buttonHeight,
+          height: height,
           alignment: Alignment.center,
           decoration: decoration,
           child: Text(
             label,
-            style: AxType.text(AxType.bodyLg,
+            style: AxType.text(labelSize,
                 weight: FontWeight.w700, color: foreground),
           ),
         ),

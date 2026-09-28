@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "806678683521",
+    "project_id": "appointex-75143",
+    "storage_bucket": "appointex-75143.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:806678683521:android:a110d5236a83c347cd1280",
+        "android_client_info": {
+          "package_name": "com.example.appointex"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "806678683521-sukruhv51nad0vu4u1ncm4qmqdl3h7nj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.appointex",
+            "certificate_hash": "38d8ff5bbc2bcc12af31600b43a056a91ec91977"
+          }
+        },
+        {
+          "client_id": "806678683521-3aug5u8bmf00smejlgb2cc9tping96gk.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCfmNYZM03a5G4wTmnCzNgkNCJM0-JRVt0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "806678683521-3aug5u8bmf00smejlgb2cc9tping96gk.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "806678683521-7j69vo6qg8a4j4g7gmi2fjtc3mji8bkm.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.appointex"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

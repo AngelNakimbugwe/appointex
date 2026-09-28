@@ -147,26 +147,44 @@ display:flex; flex-direction:column; align-items:center; gap:4px; flex:1;
 
 ## Purpose
 
-_One paragraph: what the user is doing on this screen, and what they can reach
-from it. Written from the product's point of view, not the layout's._
+The Bookings tab: the client reviews their upcoming appointments (date badge,
+provider/service, confirmed status) and their history — each past booking
+offering Rebook and Leave-a-review actions. The tabs imply filtering between
+upcoming and past; the artboard shows both sections in one list.
 
 ## Components used
 
-_Which `Ax*` widgets this screen composes, and any screen-local widgets it needs.
-If a screen-local widget here also appears on another screen, promote it to
-`design/widgets/` and note that here._
+- [x] `AxBottomNav` — embedded as `Scaffold.bottomNavigationBar`, Bookings tab
+  active (artboard lines 72–89); taps route via `context.go`
+- [x] `AxSpace` / `AxType` / `AxColors` / `AxRadius` tokens, and
+      `AxGradients.avatarPeach` for the Rebook pill (artboard line 66)
 
-- [ ] `AxMobileHeader`
-- [ ] …
+Screen-local widgets (none appear on another screen, so none promoted):
+
+- `_BookingTab` — 13.5/700 vs 13.5/600 label with a 2.5 px salmon
+  `border-bottom` on the active tab only
+- `_DateBadge` — the 46 px date tile; `active` picks brand/white vs the muted
+  `panelNeutral`/grey past look
+- `_StatusPill` — the `#EAF3EC`/`#2E8B57` confirmed chip
+- `_UpcomingBookingCard`, `_PastBookingCard` — the two card bodies
+- `_GradientActionPill`, `_OutlineActionPill` — Rebook / Leave a review
+
+No `AxMobileHeader` — this screen's header is a bare 19/800 Manrope title with
+`padding:20px 18px 8px`, not the standard bar; simpler inline than
+parameterising the header widget for one screen.
 
 ## Data model
 
-_The fixture shape this screen reads. Name the model classes and the fixture
-constant. The copy inventory above is the source of the values._
-
 ```dart
-// lib/features/<row>/<feature>/data/fixtures.dart
+// lib/features/client/my_bookings/data/fixtures.dart
+class Booking { month, day, title, detail, status?, past }
+const kMyBookingsUpcoming   // 2 bookings (AUG 26, SEP 12) with status 'Confirmed'
+const kMyBookingsPast       // 1 booking (JUL 14) with past: true
+// plus k-prefixed constants for title, tabs, section label, action labels
 ```
+
+The eyebrow fixture keeps the DOM casing (`'Past'`); the call site applies
+`.toUpperCase()` per Rule 8 (no `text-transform` in Flutter).
 
 ## Interactions & states
 
@@ -175,40 +193,59 @@ of the design rather than a transcription of it. Decide it deliberately.
 
 | Element | Interaction | Result |
 |---|---|---|
-| | | |
+| Bottom nav | tap | `context.go` to /home, /bookings, /chat, /profile |
+| Upcoming / Past tabs | tap | **Phase 4** — filter the list (currently visual; the artboard itself shows both sections under one list, which is what renders) |
+| Rebook | tap | **Phase 4** — route into the provider's book flow |
+| Leave a review | tap | **Phase 4** — review composer |
 
 **States not in the artboard** — specify each, or explicitly say "out of scope":
 
-- Loading:
-- Empty:
-- Error:
-- Pressed / hover:
-- Disabled:
+- Loading: out of scope (fixtures only, Phase 4)
+- Empty: out of scope (Phase 4)
+- Error: out of scope (Phase 4)
+- Pressed / hover: Phase 4
+- Disabled: n/a
 
 ## Responsive notes
 
-_Per-screen deviations from [03-RESPONSIVE-RULES.md](../../03-RESPONSIVE-RULES.md).
+Per-screen deviations from [03-RESPONSIVE-RULES.md](../../03-RESPONSIVE-RULES.md).
 Which fixed dimensions were kept and why; which became flexible; where the
-scroll boundary sits._
+scroll boundary sits.
 
-- Scroll region:
-- Kept fixed:
-- Made flexible:
-- Behaviour at 320 px / 900 px:
+- Scroll region: `Expanded > SingleChildScrollView` over the whole list
+  (cards + PAST section), padding `14px 18px` on the scroller (Rule 3).
+- Kept fixed: 46 px date-badge width, 64 px nav (via `AxBottomNav`), radii
+  10/14/8/16, 2.5 px tab underline — intrinsic element sizes.
+- Made flexible: cards stretch full width; the middle title/detail column is
+  `Expanded` and wraps; the status pill sits top-aligned (the artboard's
+  `align-self:flex-start` rendered as `CrossAxisAlignment.start` —
+  pixel-identical, since the date badge is the tallest row child at 1.0 scale).
+- The past-card action row uses `Wrap(spacing: 8, runSpacing: 8)` instead of
+  the artboard's `Row(gap:8)` (line 65): at 320 px × 1.3 text scale the two
+  pills overflow a `Row`. `runSpacing` mirrors the artboard's 8 px gap; at
+  390/1.0 the pills sit on one line exactly as drawn.
+- Behaviour at 320 px / 900 px: cards compress via the `Expanded` middle column;
+  long titles/details wrap inside the column. Verified at 320/390/430 and at
+  `textScaler` 1.3 — no overflow.
 
 ## Open questions
 
 _Things the artboard does not answer. Raise them rather than inventing an answer
 silently._
 
-- [ ]
+- [ ] Tab filtering (Upcoming/Past) is visual-only this phase — confirm the
+      Phase 4 behaviour (filter vs scroll-to-section).
+- [ ] Rebook destination (provider page vs book flow) is not specified by any
+      artboard.
+- [ ] The header uses 18 px horizontal padding where most screens use `pageH`
+      (20). Kept 18 verbatim; flag if the design intended `pageH`.
 
 ## Acceptance criteria
 
-- [ ] Golden passes at the reference size
-- [ ] No overflow across the responsive matrix
-- [ ] No overflow at `textScaler: 1.3`
-- [ ] Every string from the copy inventory present, character for character
-- [ ] All icons are `AxIcons` / `AxArt`, no Material substitutes
-- [ ] No literal colours or font sizes outside `design/tokens/`
+- [x] Golden passes at the reference size
+- [x] No overflow across the responsive matrix
+- [x] No overflow at `textScaler: 1.3`
+- [x] Every string from the copy inventory present, character for character
+- [x] All icons are `AxIcons` / `AxArt`, no Material substitutes
+- [x] No literal colours or font sizes outside `design/tokens/`
 - [ ] Layer-2 side-by-side reviewed and signed off

@@ -165,68 +165,66 @@ font-size:12px; font-weight:600; padding:7px 13px; border-radius:16px; border:1p
 
 ## Purpose
 
-_One paragraph: what the user is doing on this screen, and what they can reach
-from it. Written from the product's point of view, not the layout's._
+Search results for a category ("Makeup artists"). The user reviews active filter chips, a "Featured in Makeup" carousel and the full result list with ratings and from-prices, and drills into any provider (featured card or result row) to view detail and book.
 
 ## Components used
 
-_Which `Ax*` widgets this screen composes, and any screen-local widgets it needs.
-If a screen-local widget here also appears on another screen, promote it to
-`design/widgets/` and note that here._
-
-- [ ] `AxMobileHeader`
-- [ ] …
+- [x] `AxChip` — exact `.chip` match (7/13 padding, radius 16, `#E0DBCF` border, `softWrap: false`)
+- [x] `AxAvatar` — result rows 68px radius 12, art via `child` at the artboard's 52% (35.36)
+- [x] `AxRating` — wrapped in `FittedBox(fit: scaleDown)` because its internal `Row` cannot wrap; a no-op whenever the line fits (see Open questions)
+- [x] `AxVerifiedBadge`
+- [x] `AxIcon` — `chevronLeft`, `filter`, `starFill` (via `AxRating`), `artMakeup`/`artNails`/`artSpa` via `AxArt`
+- [ ] `AxMobileHeader` — **not used**: artboard header is the 56px `0 16` bordered bar (line 20); local `_Header` (same as Client_Urgent — see that spec's Open questions).
+- [ ] `AxProviderRow` — **not used**: no variant matches this artboard's row (padding 12, radius 14, avatar 68/r12, name 14/700, column gap 4, service line, price line with `margin-top:2`). Local `SearchResultRow`.
+- Local: `_FilterChipRow`, `_FeaturedSection`, `FeaturedCard` (108px fixed-width card with 108×80 gradient tile) — `FeaturedCard`/`SearchResultRow` live in `presentation/widgets/`.
 
 ## Data model
 
-_The fixture shape this screen reads. Name the model classes and the fixture
-constant. The copy inventory above is the source of the values._
-
-```dart
-// lib/features/<row>/<feature>/data/fixtures.dart
-```
+`lib/features/client/search/data/fixtures.dart` — `SearchChip`,
+`SearchFeaturedProvider`, `SearchResult` (id, name, rating, service, price,
+art, gradient) plus `kSearchChips`, `kSearchFeatured`, `kSearchResults` and the
+`kSearch*` copy constants. Featured sublines carry the literal `★` character
+(`5.0 ★ · Kololo`), not an icon.
 
 ## Interactions & states
 
-The artboards are static frames, so everything in this section is an extension
-of the design rather than a transcription of it. Decide it deliberately.
-
 | Element | Interaction | Result |
 |---|---|---|
-| | | |
+| Back arrow | tap | `context.pop()` |
+| Featured card | tap | `context.go('/provider/:id')` (fixture ids) |
+| Result row | tap | `context.go('/provider/:id')` (fixture ids) |
+| Filter chip | tap | Phase 4 — toggle selected state |
+| Filter icon (header) | tap | Phase 4 — filter sheet not specified by artboard |
 
-**States not in the artboard** — specify each, or explicitly say "out of scope":
-
-- Loading:
-- Empty:
-- Error:
-- Pressed / hover:
-- Disabled:
+- Loading: out of scope (fixtures only)
+- Empty: out of scope
+- Error: out of scope
+- Pressed / hover: Phase 4
+- Disabled: n/a
 
 ## Responsive notes
 
-_Per-screen deviations from [03-RESPONSIVE-RULES.md](../../03-RESPONSIVE-RULES.md).
-Which fixed dimensions were kept and why; which became flexible; where the
-scroll boundary sits._
-
-- Scroll region:
-- Kept fixed:
-- Made flexible:
-- Behaviour at 320 px / 900 px:
+- Scroll region: body below the fixed 56px header and the fixed chip row (Rule 3).
+- Kept fixed: header 56; featured card 108 wide, tile 80 tall, radius 12; result avatar 68 (art 35.36).
+- The chip row and the featured carousel are horizontal scrollers — `SingleChildScrollView` + `Row`, not `ListView`: a horizontal `ListView` requires a bounded cross-axis height that the artboard does not specify (chips are content-sized), and inventing one would break at `textScaler 1.3`. Cards never wrap.
+- Featured names wrap at `line-height` 1.25; result names wrap in `Flexible` (CSS-equivalent span wrapping).
+- Result-row name is 14px, which has no `AxType` token — passed as a local const citing artboard line 69.
+- Behaviour at 320 px / 900 px: verified no overflow at 320/390/430 and textScaler 1.3; at 320 the chip row and carousel scroll. 900 px is out of scope (client mobile).
 
 ## Open questions
 
-_Things the artboard does not answer. Raise them rather than inventing an answer
-silently._
-
-- [ ]
+- [ ] Same 56px bordered header as Client_Urgent (and Book/Checkout/EventBundle) — candidate for a shared `AxMobileHeader` variant.
+- [ ] `AxRating`'s internal `Row(mainAxisSize: min)` cannot wrap; this screen wraps it in `FittedBox(scaleDown)`, which is a no-op at real-font metrics but shrinks the line under the test font at 320×1.3. A `Flexible`-friendly AxRating would remove the guard.
+- [ ] `AxProviderRow` has no search-result variant (padding 12, radius 14, 68px avatar, 14px name, service + price lines) — shared widget could grow one.
+- [ ] Chip toggling, the header filter icon and the `· 28` result count are static fixture data; wiring is Phase 4.
+- [ ] No bottom nav on this artboard — confirmed absent, none embedded.
 
 ## Acceptance criteria
 
-- [ ] Golden passes at the reference size
-- [ ] No overflow across the responsive matrix
-- [ ] No overflow at `textScaler: 1.3`
-- [ ] Every string from the copy inventory present, character for character
-- [ ] All icons are `AxIcons` / `AxArt`, no Material substitutes
-- [ ] No literal colours or font sizes outside `design/tokens/`
+- [x] Golden passes at the reference size
+- [x] No overflow across the responsive matrix
+- [x] No overflow at `textScaler: 1.3`
+- [x] Every string from the copy inventory present, character for character
+- [x] All icons are `AxIcons` / `AxArt`, no Material substitutes
+- [x] No literal colours or font sizes outside `design/tokens/`
 - [ ] Layer-2 side-by-side reviewed and signed off

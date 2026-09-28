@@ -1,0 +1,381 @@
+import 'dart:io' show Platform;
+
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../../app/routes.dart';
+import '../../../../core/auth/auth_controller.dart';
+import '../../../../core/auth/auth_repository.dart';
+import '../../../../core/user/user_repository.dart';
+import '../../../../design/icons/ax_icon.dart';
+import '../../../../design/icons/ax_icons.dart';
+import '../../../../design/tokens/ax_colors.dart';
+import '../../../../design/tokens/ax_gradients.dart';
+import '../../../../design/tokens/ax_space.dart';
+import '../../../../design/tokens/ax_type.dart';
+import '../../../../design/widgets/ax_field.dart';
+import '../../../../design/widgets/ax_primary_button.dart';
+import '../data/fixtures.dart';
+
+/// Client_Login — returning-user sign-in (`/login`). Phone OTP + Google,
+/// mirroring Client_Register's visual language. Unlike register, sign-in does
+/// NOT create a profile: the router's post-auth redirect (§ router.dart)
+/// lands returning users on home (or the business dashboard) once their
+/// existing Firestore profile resolves.
+class LoginScreen extends ConsumerStatefulWidget {
+  const LoginScreen({super.key});
+
+  @override
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends ConsumerState<LoginScreen> {
+  final _phoneController = TextEditingController();
+  final _otpController = TextEditingController();
+  int _step = 0;
+  bool _handledSignIn = false;
+
+  @override
+  void dispose() {
+    _phoneController.dispose();
+    _otpController.dispose();
+    super.dispose();
+  }
+
+  // A sign-in started here (OTP or Google) must not strand a brand-new user
+  // on the auth screen: the router only redirects once a Firestore profile
+  // exists, so create it (a no-op for returning users) and let the router's
+  // own redirect own the destination.
+  Future<void> _handleSignedIn(AuthUser firebaseUser) async {
+    if (_handledSignIn) return;
+    _handledSignIn = true;
+    final displayName =
+        (firebaseUser.displayName?.trim().isNotEmpty ?? false)
+            ? firebaseUser.displayName!.trim()
+            : 'New client';
+    await ref.read(userRepositoryProvider).createIfMissing(
+          uid: firebaseUser.uid,
+          role: AppUserRole.client,
+          displayName: displayName,
+          phoneNumber: firebaseUser.phoneNumber,
+          email: firebaseUser.email,
+          photoUrl: firebaseUser.photoUrl,
+        );
+    if (mounted) ref.invalidate(currentAppUserProvider);
+  }
+
+  Future<void> _onLoginPressed() async {
+    final phone = _phoneController.text.trim();
+    if (phone.isEmpty) return;
+    await ref.read(authControllerProvider.notifier).sendOtp(phone);
+  }
+
+  Future<void> _onVerifyPressed() async {
+    final code = _otpController.text.trim();
+    if (code.isEmpty) return;
+    await ref.read(authControllerProvider.notifier).verifyOtp(code);
+  }
+
+  Future<void> _onGooglePressed() async {
+    if (kIsWeb || Platform.isAndroid || Platform.isIOS) {
+      await ref.read(authControllerProvider.notifier).signInWithGoogle();
+      return;
+    }
+    // google_sign_in has no Windows/Linux/macOS implementation — the call
+    // would hang forever. Surface a clear message instead of a dead button.
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Google sign-in works on Android, iOS and web. '
+            'Use phone sign-in here, or run the app on one of those platforms.',
+          ),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ref.listen<AsyncValue<AuthUser?>>(authStateChangesProvider, (previous, next) {
+      final user = next.value;
+      if (user != null) {
+        _handleSignedIn(user);
+      }
+    });
+    final authState = ref.watch(authControllerProvider);
+
+    // Auto-advance to the OTP step once a code has been sent.
+    if (authState.status == AuthFlowStatus.codeSent && _step == 0) {
+      _step = 1;
+    }
+    final busy = authState.status == AuthFlowStatus.sendingCode ||
+        authState.status == AuthFlowStatus.verifyingCode ||
+        authState.status == AuthFlowStatus.signingInWithGoogle;
+
+    return Scaffold(
+      backgroundColor: AxColors.surface,
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _BackBar(
+              onBack: () {
+                if (_step == 1) {
+                  setState(() => _step = 0);
+                  ref.read(authControllerProvider.notifier).reset();
+                } else {
+                  context.go(AxRoutes.onboarding);
+                }
+              },
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(
+                  AxSpace.s24,
+                  AxSpace.s6,
+                  AxSpace.s24,
+                  0,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  spacing: AxSpace.s22,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      spacing: AxSpace.s6,
+                      children: [
+                        Text(
+                          kLoginTitle,
+                          style: AxType.head(
+                            AxType.h3,
+                            weight: FontWeight.w800,
+                            color: AxColors.brand,
+                          ),
+                        ),
+                        Text(
+                          kLoginSubtitle,
+                          style: AxType.text(
+                            AxType.label,
+                            color: AxColors.textMuted,
+                            height: 1.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (_step == 0)
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        spacing: AxSpace.s16,
+                        children: [
+                          AxLabeledField(
+                            kLoginPhoneLabel,
+                            hint: kLoginPhoneHint,
+                            controller: _phoneController,
+                            keyboardType: TextInputType.phone,
+                          ),
+                        ],
+                      )
+                    else
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        spacing: AxSpace.s6,
+                        children: [
+                          AxFieldLabel(kLoginOtpTitle),
+                          AxField(
+                            hint: kLoginOtpHint,
+                            controller: _otpController,
+                            keyboardType: TextInputType.number,
+                          ),
+                          GestureDetector(
+                            onTap: _onLoginPressed,
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: AxSpace.s6),
+                              child: Text.rich(
+                                TextSpan(
+                                  text: '$kLoginOtpResendPrompt ',
+                                  style: AxType.text(
+                                    AxType.labelSm,
+                                    color: AxColors.textSubtle,
+                                  ),
+                                  children: [
+                                    TextSpan(
+                                      text: kLoginOtpResendLink,
+                                      style: AxType.text(
+                                        AxType.labelSm,
+                                        color: AxColors.brandMid,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    if (authState.status == AuthFlowStatus.error)
+                      Text(
+                        authState.errorMessage ?? 'Something went wrong.',
+                        style: AxType.text(AxType.labelSm, color: Colors.red),
+                      ),
+                    Text(
+                      kLoginLegal,
+                      style: AxType.text(
+                        AxType.micro,
+                        color: AxColors.textFaint,
+                        height: 1.6,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AxSpace.s24,
+                AxSpace.s14,
+                AxSpace.s24,
+                AxSpace.s26,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                spacing: AxSpace.s14,
+                children: [
+                  _CtaButton(
+                    label: _step == 0 ? kLoginCta : kLoginOtpCta,
+                    onPressed: busy
+                        ? null
+                        : (_step == 0 ? _onLoginPressed : _onVerifyPressed),
+                  ),
+                  if (_step == 0)
+                    AxPrimaryButton(
+                      label: kLoginGoogleCta,
+                      style: AxButtonStyle.outline,
+                      onPressed: busy ? null : _onGooglePressed,
+                    ),
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => context.go(AxRoutes.register),
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: AxSpace.s2),
+                      child: Text.rich(
+                        TextSpan(
+                          text: '$kLoginNoAccountPrompt ',
+                          style: AxType.text(
+                            AxType.labelSm,
+                            color: AxColors.textSubtle,
+                          ),
+                          children: [
+                            TextSpan(
+                              text: kLoginNoAccountLink,
+                              style: AxType.text(
+                                AxType.labelSm,
+                                weight: FontWeight.w700,
+                                color: AxColors.brandMid,
+                              ),
+                            ),
+                          ],
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => context.go(AxRoutes.home),
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: AxSpace.s2),
+                      child: Text.rich(
+                        TextSpan(
+                          text: '$kLoginGuestPrompt ',
+                          style: AxType.text(
+                            AxType.labelSm,
+                            color: AxColors.textSubtle,
+                          ),
+                          children: [
+                            TextSpan(
+                              text: kLoginGuestLink,
+                              style: AxType.text(
+                                AxType.labelSm,
+                                color: AxColors.brandMid,
+                              ),
+                            ),
+                          ],
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _BackBar extends StatelessWidget {
+  const _BackBar({required this.onBack});
+
+  final VoidCallback onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 56,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AxSpace.s16),
+        child: Row(
+          children: [
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: onBack,
+              child: const AxIcon(
+                AxIcons.chevronLeft,
+                size: 19,
+                color: AxColors.brand,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CtaButton extends StatelessWidget {
+  const _CtaButton({required this.label, this.onPressed});
+
+  final String label;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Opacity(
+        opacity: onPressed == null ? 0.5 : 1,
+        child: Container(
+          height: AxSpace.buttonHeight,
+          alignment: Alignment.center,
+          decoration: const ShapeDecoration(
+            gradient: AxGradients.avatarPeach,
+            shape: StadiumBorder(),
+          ),
+          child: Text(
+            label,
+            style: AxType.text(
+              AxType.body,
+              weight: FontWeight.w700,
+              color: AxColors.brand,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

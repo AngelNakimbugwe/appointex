@@ -213,68 +213,86 @@ font-size:11px; font-weight:700; color:#9A9A9A; text-transform:uppercase; letter
 
 ## Purpose
 
-_One paragraph: what the user is doing on this screen, and what they can reach
-from it. Written from the product's point of view, not the layout's._
+The provider's client book: a searchable list of clients with visit recency,
+frequency, lifetime spend and each client's favourite service. From here the
+provider can find a client (search) and will eventually reach a client's
+history by tapping a row (Phase 4). It is the screen behind the sidebar's
+"Clients" destination.
 
 ## Components used
 
-_Which `Ax*` widgets this screen composes, and any screen-local widgets it needs.
-If a screen-local widget here also appears on another screen, promote it to
-`design/widgets/` and note that here._
-
-- [ ] `AxMobileHeader`
-- [ ] …
+- [x] `BizShell` + `AxSidebar` (via `AxSidebarItem.clients`)
+- [x] `AxAvatar` — 32 px circular, `person_fill` at 55 % / `#FFFFFF` at
+      0.92 opacity over the row's per-client gradient
+- Screen-local `_SearchField` — the 280×40 search box. Local because
+  `AxField` has no leading-icon slot and its desktop height is 44, not 40.
+- Screen-local `ClientsTable` in `presentation/widgets/clients_table.dart` —
+  **`AxDataTable` could not carry this table**: its rows are
+  `List<List<String>>` (no avatar cells) and it has no per-column
+  `textAlign` for the artboard's centred "Visits" column. The local table
+  copies its chrome values exactly (header padding `6,16,6,13` over the
+  `#E8E3D8` rule, `.th` 11/700 `#9A9A9A` uppercase +0.03em, rows gap 14,
+  padding `13px 6px`, `#F1EEE6` rules between rows only). Recommend extending
+  `AxDataTable` (widget cells + per-column alignment) and folding this back
+  in a later phase.
 
 ## Data model
 
-_The fixture shape this screen reads. Name the model classes and the fixture
-constant. The copy inventory above is the source of the values._
+`lib/features/business/clients/data/fixtures.dart`:
 
-```dart
-// lib/features/<row>/<feature>/data/fixtures.dart
-```
+- `kPageTitle`, `kSearchHint` — header strings
+- `kColumns` — the five `.th` labels, uppercased at the call site (Rule 8)
+- `ClientRecord(name, lastVisit, visits, totalSpend, favouriteService,
+  gradient)` — `gradient` is the avatar's `AxGradients` entry
+- `kClients` — the five rows in artboard order
 
 ## Interactions & states
 
-The artboards are static frames, so everything in this section is an extension
-of the design rather than a transcription of it. Decide it deliberately.
-
 | Element | Interaction | Result |
 |---|---|---|
-| | | |
+| Search field | typing | Filters the table — Phase 4 (the artboard shows the empty hint only) |
+| Client row | tap | Client detail / history — Phase 4 |
+| Column header | tap | Sort — not specified anywhere; out of scope |
 
-**States not in the artboard** — specify each, or explicitly say "out of scope":
-
-- Loading:
-- Empty:
-- Error:
-- Pressed / hover:
-- Disabled:
+**States not in the artboard** — Loading: out of scope (fixtures only).
+Empty (no clients / no search hits): out of scope — the artboard shows a
+populated table only. Error: out of scope. Pressed / hover: Phase 4.
+Disabled: n/a.
 
 ## Responsive notes
 
-_Per-screen deviations from [03-RESPONSIVE-RULES.md](../../03-RESPONSIVE-RULES.md).
-Which fixed dimensions were kept and why; which became flexible; where the
-scroll boundary sits._
-
-- Scroll region:
-- Kept fixed:
-- Made flexible:
-- Behaviour at 320 px / 900 px:
+- Scroll region: `BizShell`'s pane `SingleChildScrollView`; the table card is
+  the trailing `Expanded` and stretches below the rows, as the artboard's
+  `flex:1` card does.
+- Kept fixed: search field 280×40, avatar 32, row padding 13/6, gap 14 and the
+  column flex ratio 1.6 / 1 / 0.8 / 1 / 1.4 (scaled ×5 to int flexes
+  8/5/4/5/7 to match `AxDataTable`'s int `flexes` parameter).
+- Made flexible: the card stretches; the five columns compress
+  proportionally; the search hint ellipsizes inside the fixed field under
+  extreme text scale.
+- Cells are single-line with ellipsis (`maxLines: 1`), matching the
+  single-line rows of the artboard and the convention used by the settings
+  and provider rows. With real fonts nothing truncates at ≥ 900 px; the
+  favourite-service column would otherwise wrap ("Bridal makeup, full glam"
+  is ~150 px vs a ~135 px column at 900 px).
+- At 900 px the columns run ~154 / 96 / 77 / 96 / 135 px; the header and
+  table stay on one row.
 
 ## Open questions
 
-_Things the artboard does not answer. Raise them rather than inventing an answer
-silently._
-
-- [ ]
+- [ ] Extend `AxDataTable` to carry widget cells and per-column alignment,
+      then fold `ClientsTable` back into it?
+- [ ] Sortable columns / pagination for client lists longer than a screen —
+      not specified anywhere yet.
+- [ ] The search field is decorative until Phase 4 — should the empty
+      state (no clients, no hits) be specified before then?
 
 ## Acceptance criteria
 
-- [ ] Golden passes at the reference size
-- [ ] No overflow across the responsive matrix
-- [ ] No overflow at `textScaler: 1.3`
-- [ ] Every string from the copy inventory present, character for character
-- [ ] All icons are `AxIcons` / `AxArt`, no Material substitutes
-- [ ] No literal colours or font sizes outside `design/tokens/`
+- [x] Golden passes at the reference size
+- [x] No overflow across the responsive matrix
+- [x] No overflow at `textScaler: 1.3`
+- [x] Every string from the copy inventory present, character for character
+- [x] All icons are `AxIcons` / `AxArt`, no Material substitutes
+- [x] No literal colours or font sizes outside `design/tokens/`
 - [ ] Layer-2 side-by-side reviewed and signed off

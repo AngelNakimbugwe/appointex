@@ -50,10 +50,11 @@ abstract final class AxSpace {
     vertical: 22,
   );
 
-  /// Business content padding: `26, 32`.
+  /// Business content padding: `26, 32` (vertical, horizontal —
+  /// `padding:26px 32px`, Biz_Dashboard.dc.html line 58).
   static const EdgeInsets bizContentPadding = EdgeInsets.symmetric(
-    horizontal: 26,
-    vertical: 32,
+    horizontal: 32,
+    vertical: 26,
   );
 
   /// Business section gap.

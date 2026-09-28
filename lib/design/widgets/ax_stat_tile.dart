@@ -13,6 +13,12 @@ import '../tokens/ax_type.dart';
 /// uses `#FEC89A` / `#A66A5D`); Biz_Earnings tiles have no top accent — pass
 /// `accent: null` for that variant.
 ///
+/// Biz_Earnings.dc.html line 68 sets the value at `font-size:22px` (the
+/// dashboard tiles are 24) — pass [valueSize] for that, and line 71 has a
+/// fourth tile with `background:#6B3F3A; border-color:#6B3F3A`, label
+/// `#FEC89A`, value `#FFFFFF` — the [AxStatTile.dark] variant. Both
+/// additions default to the original dashboard rendering.
+///
 /// **Implementation warning** (docs/04): Flutter cannot render a `Border` with
 /// one differing side plus a `borderRadius` — it throws. The accent is built
 /// as a 3 px child inside a `ClipRRect`.
@@ -22,11 +28,29 @@ class AxStatTile extends StatelessWidget {
     required this.label,
     required this.value,
     this.accent = AxColors.salmon,
+    this.valueSize = AxType.h2,
+    this.dark = false,
   });
+
+  /// Dark `.stat` — Biz_Earnings.dc.html line 71: `background:#6B3F3A;
+  /// border-color:#6B3F3A`, label `#FEC89A`, value `#FFFFFF`, no top accent.
+  const AxStatTile.dark({
+    super.key,
+    required this.label,
+    required this.value,
+    this.valueSize = AxType.h2,
+  })  : accent = null,
+        dark = true;
 
   final String label;
   final String value;
   final Color? accent;
+
+  /// Manrope 800 value size — 24 (dashboard) by default; 22 on Biz_Earnings.
+  final double valueSize;
+
+  /// Whether this tile paints the dark `#6B3F3A` look.
+  final bool dark;
 
   @override
   Widget build(BuildContext context) {
@@ -34,8 +58,8 @@ class AxStatTile extends StatelessWidget {
       borderRadius: const BorderRadius.all(Radius.circular(AxRadius.tile)),
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: AxColors.surface,
-          border: Border.all(color: AxColors.border),
+          color: dark ? AxColors.brand : AxColors.surface,
+          border: Border.all(color: dark ? AxColors.brand : AxColors.border),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -50,12 +74,13 @@ class AxStatTile extends StatelessWidget {
                   Text(
                     label,
                     style: AxType.text(AxType.captionSm,
-                        color: AxColors.textSubtle),
+                        color: dark ? AxColors.peach : AxColors.textSubtle),
                   ),
                   Text(
                     value,
-                    style: AxType.head(AxType.h2,
-                        weight: FontWeight.w800, color: AxColors.brand),
+                    style: AxType.head(valueSize,
+                        weight: FontWeight.w800,
+                        color: dark ? AxColors.surface : AxColors.brand),
                   ),
                 ],
               ),

@@ -205,68 +205,47 @@ width:16px; height:16px; border-radius:50%; background:#FFFFFF;
 
 ## Purpose
 
-_One paragraph: what the user is doing on this screen, and what they can reach
-from it. Written from the product's point of view, not the layout's._
+The business owner manages their service menu and pricing: each service's category, duration, price and whether it is bookable (the Active toggle), plus the "+ Add service" action. The only navigation onward is the shell sidebar; within the screen, toggling availability is live and adding a service is a Phase 4 flow.
 
 ## Components used
 
-_Which `Ax*` widgets this screen composes, and any screen-local widgets it needs.
-If a screen-local widget here also appears on another screen, promote it to
-`design/widgets/` and note that here._
-
-- [ ] `AxMobileHeader`
-- [ ] …
+- `BizShell` (sidebar + scrolling pane; sidebar taps already wired by the shell)
+- `AxToggle` — Active column, `value`/`onChanged`
+- Screen-local: `ServicesTable` (`presentation/widgets/services_table.dart`, state held by the table card in the screen file) and the "+ Add service" chip (gradient stadium, height 38 — the gradient is `AxGradients.avatarPeach`, whose documented stops are the artboard's `135deg, #FEC89A → #FFB5A7`). **Recommendation:** extend the shared `AxDataTable` with per-cell builders (toggle cells, per-column weights); its `List<List<String>>` rows cannot express either. If another screen needs a gradient stadium chip, promote it next to `AxPrimaryButton`.
 
 ## Data model
 
-_The fixture shape this screen reads. Name the model classes and the fixture
-constant. The copy inventory above is the source of the values._
-
-```dart
-// lib/features/<row>/<feature>/data/fixtures.dart
-```
+`lib/features/business/services/data/fixtures.dart` — `ServiceRow {name, category, duration, price, active}` as `kServices`, plus `kPageTitle`, `kAddServiceLabel`, `kColumns`. All values verbatim from the copy inventory above; the `active` flags are the artboard's toggle states (rows 1-3 and 5 on, row 4 off).
 
 ## Interactions & states
 
-The artboards are static frames, so everything in this section is an extension
-of the design rather than a transcription of it. Decide it deliberately.
-
 | Element | Interaction | Result |
 |---|---|---|
-| | | |
+| Active toggle | tap | flips that row's toggle (state lives in the screen; persists for the session) |
+| "+ Add service" chip | none | display only; the add-service flow is Phase 4 |
+| Sidebar rows | tap | navigate via BizShell (already wired) |
 
-**States not in the artboard** — specify each, or explicitly say "out of scope":
-
-- Loading:
-- Empty:
-- Error:
-- Pressed / hover:
-- Disabled:
+**States not in the artboard** — loading / empty / error are out of scope (static port; Phase 4 wires the API). Pressed / hover / disabled on the chip and toggles are Phase 4.
 
 ## Responsive notes
 
-_Per-screen deviations from [03-RESPONSIVE-RULES.md](../../03-RESPONSIVE-RULES.md).
-Which fixed dimensions were kept and why; which became flexible; where the
-scroll boundary sits._
-
-- Scroll region:
-- Kept fixed:
-- Made flexible:
-- Behaviour at 320 px / 900 px:
+- Scroll region: the whole content pane (`BizShell`'s `SingleChildScrollView`, Rule 3); the table card is the `flex:1` body via a trailing `Expanded`.
+- Kept fixed: chip height 38, toggle 36×20, row padding `12 6`, sidebar 220, all font sizes/radii/colours.
+- Made flexible: table columns are proportional flexes `9, 5, 4, 5, 4` (×5 of `1.8, 1, 0.8, 1, 0.8`); every cell text ellipsizes (`maxLines: 1`); the toggle sits left-aligned in its cell like the artboard's flex item.
+- 900 px: columns compress, cell text ellipsizes; 1440 px: the card stretches with the pane. `textScaler 1.3` — the 38 px chip still holds the 16.25 px label; verified no overflow.
 
 ## Open questions
 
-_Things the artboard does not answer. Raise them rather than inventing an answer
-silently._
-
-- [ ]
+- [ ] `lib/app/router.dart` still routes `/biz/services` to the Phase 0 placeholder (outside this task's file set) — needs wiring.
+- [ ] The artboard's toggle markup carries duplicate `style` attributes; the visual intent (`#6B3F3A` on, `#D7D1C2` off, knob 16 px) is unambiguous and matches §AxToggle, but the file's own rendering may differ.
+- [ ] What happens to booked appointments when a service is switched off — hidden from booking only, or cancelled? Product question for Phase 4.
 
 ## Acceptance criteria
 
-- [ ] Golden passes at the reference size
-- [ ] No overflow across the responsive matrix
-- [ ] No overflow at `textScaler: 1.3`
-- [ ] Every string from the copy inventory present, character for character
-- [ ] All icons are `AxIcons` / `AxArt`, no Material substitutes
-- [ ] No literal colours or font sizes outside `design/tokens/`
+- [x] Golden passes at the reference size
+- [x] No overflow across the responsive matrix
+- [x] No overflow at `textScaler: 1.3`
+- [x] Every string from the copy inventory present, character for character
+- [x] All icons are `AxIcons` / `AxArt`, no Material substitutes (content pane has no icons; sidebar renders via `AxIcon`)
+- [x] No literal colours or font sizes outside `design/tokens/`
 - [ ] Layer-2 side-by-side reviewed and signed off

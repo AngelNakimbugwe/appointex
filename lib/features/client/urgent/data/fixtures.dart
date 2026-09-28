@@ -42,6 +42,7 @@ class UrgentMatch {
     required this.feeTotal,
     required this.art,
     required this.gradient,
+    this.imageAsset,
   });
 
   final String id;
@@ -52,6 +53,9 @@ class UrgentMatch {
   final String feeTotal;
   final String art;
   final Gradient gradient;
+
+  /// A real photo (`assets/images/*`) shown instead of [art] when set.
+  final String? imageAsset;
 }
 
 const String kUrgentTitle = 'Urgent booking';
@@ -111,6 +115,7 @@ const List<UrgentMatch> kUrgentMatches = [
     feeTotal: 'UGX 75,000',
     art: AxArt.artMakeup,
     gradient: AxGradients.avatarSand,
+    imageAsset: 'assets/images/makeup_1.jpg',
   ),
   UrgentMatch(
     id: 'ninas-beauty-bar',
@@ -121,5 +126,6 @@ const List<UrgentMatch> kUrgentMatches = [
     feeTotal: 'UGX 43,750',
     art: AxArt.artNails,
     gradient: AxGradients.avatarBlush,
+    imageAsset: 'assets/images/nails_2.jpg',
   ),
 ];

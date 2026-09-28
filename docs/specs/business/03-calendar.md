@@ -184,68 +184,78 @@ border-radius:8px; padding:7px 9px; display:flex; flex-direction:column; gap:2px
 
 ## Purpose
 
-_One paragraph: what the user is doing on this screen, and what they can reach
-from it. Written from the product's point of view, not the layout's._
+The provider scans their week at a glance: which days carry bookings, what is
+confirmed (green), pending (amber) or a wedding job (dark), and steps
+week-by-week with the chevrons. "+ Make an appointment" is the entry point for
+manually adding a booking. Everything else on the screen is the shared
+business shell (sidebar) around the seven-day grid.
 
 ## Components used
 
-_Which `Ax*` widgets this screen composes, and any screen-local widgets it needs.
-If a screen-local widget here also appears on another screen, promote it to
-`design/widgets/` and note that here._
-
-- [ ] `AxMobileHeader`
-- [ ] …
+- [x] `BizShell` + `AxSidebar` (via `AxSidebarItem.calendar`)
+- [x] `AxIcon` (the two 16 px week chevrons, stroke 2.2)
+- Screen-local, Tier 3 (`.daycol` / `.appt` stay in the feature per docs/04):
+  `WeekGrid` + `_DayColumn` + `_DayHeader` + `_AppointmentBlock` in
+  `presentation/widgets/week_grid.dart`.
+- Screen-local `_MakeAppointmentButton`: the artboard's CTA is
+  `height:38; padding:0 16px; border-radius:19px` on the same peach→salmon
+  gradient as `AxPrimaryButton`'s gradient style, but `AxPrimaryButton` has no
+  horizontal-padding parameter, so the local twin stays until that is added.
 
 ## Data model
 
-_The fixture shape this screen reads. Name the model classes and the fixture
-constant. The copy inventory above is the source of the values._
+`lib/features/business/calendar/data/fixtures.dart`:
 
-```dart
-// lib/features/<row>/<feature>/data/fixtures.dart
-```
+- `kPageTitle`, `kWeekRange`, `kMakeAppointment` — header strings
+- `AppointmentTone` enum (`confirmed` / `pending` / `wedding`) — selects the
+  `.appt` colour family
+- `CalendarAppointment(time, client, tone)`
+- `CalendarDay(label, today, appointments)` — `today` drives the `WED 26` pill
+- `kWeek` — the seven days in artboard order
 
 ## Interactions & states
 
-The artboards are static frames, so everything in this section is an extension
-of the design rather than a transcription of it. Decide it deliberately.
-
 | Element | Interaction | Result |
 |---|---|---|
-| | | |
+| Week chevrons | tap | Previous / next week — Phase 4 (fixtures are static) |
+| "+ Make an appointment" | tap | Booking-creation flow — Phase 4 |
+| `.appt` block | tap | Booking detail — Phase 4 |
+| `.daycol` header | tap | Day view — not specified anywhere; out of scope |
 
-**States not in the artboard** — specify each, or explicitly say "out of scope":
-
-- Loading:
-- Empty:
-- Error:
-- Pressed / hover:
-- Disabled:
+**States not in the artboard** — Loading: out of scope (fixtures only).
+Empty: day columns without appointments render the weekday header only, as
+drawn. Error: out of scope. Pressed / hover: Phase 4. Disabled: n/a.
 
 ## Responsive notes
 
-_Per-screen deviations from [03-RESPONSIVE-RULES.md](../../03-RESPONSIVE-RULES.md).
-Which fixed dimensions were kept and why; which became flexible; where the
-scroll boundary sits._
-
-- Scroll region:
-- Kept fixed:
-- Made flexible:
-- Behaviour at 320 px / 900 px:
+- Scroll region: `BizShell`'s pane `SingleChildScrollView`; the week grid is
+  the trailing `Expanded`, so it fills the pane exactly at the reference
+  height and grows (scrolls) under large text scale.
+- Kept fixed: CTA height 38, chevron sizes 16, all paddings/gaps/radii and
+  the tone colours.
+- Made flexible: the card and the seven `.daycol`s are equal `Expanded`s; the
+  header's week-nav/CTA group is a chain of loose `Flexible`s so the CTA label
+  ellipsizes instead of overflowing below 1160 px (invisible at the reference
+  size — nothing shrinks there).
+- Appointment text wraps within a column at narrow widths, exactly as the
+  artboard's block-level spans would in CSS.
+- At 900 px the columns compress to ~68 px of content; day labels and
+  appointment text still fit (or wrap under 1.3× text scale).
 
 ## Open questions
 
-_Things the artboard does not answer. Raise them rather than inventing an answer
-silently._
-
-- [ ]
+- [ ] Should `AxPrimaryButton` take a horizontal-padding parameter (or a
+      "hug content" variant) so this CTA and the shared `.btn` merge?
+- [ ] Week-switching semantics: does "24 to 30 August" always mean a
+      Monday-first week, and what happens to the `WED 26` today-pill when the
+      provider navigates away from the current week?
 
 ## Acceptance criteria
 
-- [ ] Golden passes at the reference size
-- [ ] No overflow across the responsive matrix
-- [ ] No overflow at `textScaler: 1.3`
-- [ ] Every string from the copy inventory present, character for character
-- [ ] All icons are `AxIcons` / `AxArt`, no Material substitutes
-- [ ] No literal colours or font sizes outside `design/tokens/`
+- [x] Golden passes at the reference size
+- [x] No overflow across the responsive matrix
+- [x] No overflow at `textScaler: 1.3`
+- [x] Every string from the copy inventory present, character for character
+- [x] All icons are `AxIcons` / `AxArt`, no Material substitutes
+- [x] No literal colours or font sizes outside `design/tokens/`
 - [ ] Layer-2 side-by-side reviewed and signed off

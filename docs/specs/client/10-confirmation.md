@@ -110,68 +110,78 @@ _None — this screen is entirely inline-styled._
 
 ## Purpose
 
-_One paragraph: what the user is doing on this screen, and what they can reach
-from it. Written from the product's point of view, not the layout's._
+The success leg of the booking flow: a centred hero and summary card confirm
+the booking (provider, service, time, amount held in escrow) and the WhatsApp
+confirmation, with a cancellation footnote. "View booking" jumps to the
+bookings list; "Add to calendar" will add the appointment to the device
+calendar.
 
 ## Components used
 
-_Which `Ax*` widgets this screen composes, and any screen-local widgets it needs.
-If a screen-local widget here also appears on another screen, promote it to
-`design/widgets/` and note that here._
-
-- [ ] `AxMobileHeader`
-- [ ] …
+- `AxPrimaryButton` ×2 — gradient "View booking" and outline "Add to
+  calendar", both height 48 with 14 px labels (radius 24 on 48 = stadium)
+- Screen-local (kept local on purpose):
+  - `_Hero` — the 120×120 confetti `Stack`; the four dots are plain filled
+    `Container`s, not SVG assets (docs/05 "Not icons at all")
+  - `_DetailsCard` / `_DetailRow` / `_Rule` — the summary card rows
+  - `_TitleBlock`, `_Buttons` — trivial single-screen composites
 
 ## Data model
 
-_The fixture shape this screen reads. Name the model classes and the fixture
-constant. The copy inventory above is the source of the values._
+`Confirmation`, `ConfirmationDetail`; fixture `kConfirmation` in
+`lib/features/client/confirmation/data/fixtures.dart` — all strings verbatim
+from the copy inventory.
 
 ```dart
-// lib/features/<row>/<feature>/data/fixtures.dart
+// lib/features/client/confirmation/data/fixtures.dart
+const kConfirmation = Confirmation(...);
 ```
 
 ## Interactions & states
 
-The artboards are static frames, so everything in this section is an extension
-of the design rather than a transcription of it. Decide it deliberately.
-
 | Element | Interaction | Result |
 |---|---|---|
-| | | |
+| "View booking" | tap | `context.go('/bookings')` |
+| "Add to calendar" | tap | device calendar intent — Phase 4; no-op in this port |
 
-**States not in the artboard** — specify each, or explicitly say "out of scope":
+**States not in the artboard**
 
-- Loading:
-- Empty:
-- Error:
-- Pressed / hover:
-- Disabled:
+- Loading: out of scope (fixture-driven static port)
+- Empty: n/a (there is always a booking to confirm)
+- Error: out of scope
+- Pressed / hover: Phase 4
+- Disabled: n/a
 
 ## Responsive notes
 
-_Per-screen deviations from [03-RESPONSIVE-RULES.md](../../03-RESPONSIVE-RULES.md).
-Which fixed dimensions were kept and why; which became flexible; where the
-scroll boundary sits._
-
-- Scroll region:
-- Kept fixed:
-- Made flexible:
-- Behaviour at 320 px / 900 px:
+- Scroll region: the whole screen. `LayoutBuilder > SingleChildScrollView >
+  ConstrainedBox(minHeight)` keeps the content centred when it fits and
+  scrollable when it does not (at 320×640 with `textScaler 1.3` it scrolls)
+- Kept fixed: hero box 120, gradient disc 76, check icon 38, buttons 48
+- Made flexible: card and buttons fill the content column
+  (`crossAxisAlignment: stretch`), the hero is wrapped in `Center` so the
+  `Positioned` confetti dots keep their 120×120 coordinate box
+- No header and no bottom nav — the artboard is a bare centred column
+  (full-screen flow)
 
 ## Open questions
 
-_Things the artboard does not answer. Raise them rather than inventing an answer
-silently._
-
-- [ ]
+- [ ] The gradient disc carries `box-shadow:0 10px 24px
+      rgba(224,122,95,0.4)` (artboard line 24). Omitted: the port bans
+      shadows, and `#E07A5F` has no `AxColors` token (the lint forbids a
+      local `Color(0x…)`). Needs a design/token decision.
+- [ ] "Add to calendar" behaviour — device calendar intent is unspecified in
+      the artboards.
+- [ ] "Amount held" (`UGX 206,000`) differs from the checkout total
+      (`UGX 266,000`) in the artboards; kept verbatim, presumably a
+      deposit-vs-total distinction to be confirmed.
 
 ## Acceptance criteria
 
-- [ ] Golden passes at the reference size
-- [ ] No overflow across the responsive matrix
-- [ ] No overflow at `textScaler: 1.3`
-- [ ] Every string from the copy inventory present, character for character
-- [ ] All icons are `AxIcons` / `AxArt`, no Material substitutes
-- [ ] No literal colours or font sizes outside `design/tokens/`
+- [x] Golden passes at the reference size
+- [x] No overflow across the responsive matrix
+- [x] No overflow at `textScaler: 1.3`
+- [x] Every string from the copy inventory present, character for character
+- [x] All icons are `AxIcons` / `AxArt`, no Material substitutes
+- [x] No literal colours or font sizes outside `design/tokens/`
 - [ ] Layer-2 side-by-side reviewed and signed off

@@ -189,68 +189,96 @@ flex:1; background:#FFFFFF; border:1px solid #ECE7DC; border-top:3px solid #FFB5
 
 ## Purpose
 
-_One paragraph: what the user is doing on this screen, and what they can reach
-from it. Written from the product's point of view, not the layout's._
+The business home. A provider lands here after login to check today at a
+glance — bookings, takings, held payout and rating — read today's schedule
+with each booking's confirmation state, and see their latest review. Every
+other dashboard section (Calendar, Clients, Earnings, Services, Featured
+Spots, Settings) is reachable through the sidebar.
 
 ## Components used
 
-_Which `Ax*` widgets this screen composes, and any screen-local widgets it needs.
-If a screen-local widget here also appears on another screen, promote it to
-`design/widgets/` and note that here._
-
-- [ ] `AxMobileHeader`
-- [ ] …
+- `BizShell` — first consumer of the shared business scaffold
+  (`Scaffold(body: BizShell(current: AxSidebarItem.dashboard, child: …))`)
+- `AxSidebarItem` routing via `context.go` to the `AxRoutes.biz*` paths
+- `AxStatTile` — dashboard variant, per-tile accents `#FFB5A7`, `#FFB5A7`,
+  `#FEC89A`, `#A66A5D` (artboard `border-top-color` overrides)
+- `AxIcon` — `bell` (20), `starFill` (12, ×5)
+- Screen-local: `_Header`, `_PanelCard` (the shared `.stat`-chrome card),
+  `_ScheduleRow`, `_ReviewsCard`
+- `BizSidebar` — a local clone of `AxSidebar` used by `BizShell` only because
+  the shared widget's brand block (unbounded `Row` child) throws
+  "RenderFlex overflowed by 15 px" at wide glyph metrics (e.g. the test font
+  at 1.3× text scale). Fix is one `Expanded` in `ax_sidebar.dart`; promote and
+  delete the clone.
+- `AxDataTable` is *not* used — the schedule is a time-row list, not a
+  `.th`/`.row` table.
 
 ## Data model
 
-_The fixture shape this screen reads. Name the model classes and the fixture
-constant. The copy inventory above is the source of the values._
-
 ```dart
-// lib/features/<row>/<feature>/data/fixtures.dart
+// lib/features/business/dashboard/data/fixtures.dart
+class DashboardStat { final String label; final String value; final Color accent; }
+const List<DashboardStat> kStats;      // 4 tiles, accent from artboard line 68-71
+
+class ScheduleEntry { final String time; final String client; final String service; final bool confirmed; }
+const List<ScheduleEntry> kSchedule;  // 3 rows; status getter -> kStatusConfirmed | kStatusPending
+
+const String kGreeting, kDateLine, kScheduleTitle, kReviewsTitle;
+const int kReviewStars;                // 5
+const String kReviewQuote, kReviewAuthor;
 ```
 
 ## Interactions & states
 
-The artboards are static frames, so everything in this section is an extension
-of the design rather than a transcription of it. Decide it deliberately.
-
 | Element | Interaction | Result |
 |---|---|---|
-| | | |
+| Sidebar rows | tap | `context.go` to the matching `/biz/*` route (fixed 7-item order) |
+| Bell, stat tiles, schedule rows, review | — | inert in this port (no artboard targets) |
 
-**States not in the artboard** — specify each, or explicitly say "out of scope":
+**States not in the artboard**
 
-- Loading:
-- Empty:
-- Error:
-- Pressed / hover:
-- Disabled:
+- Loading: Phase 4.
+- Empty (no schedule / no reviews): Phase 4.
+- Error: out of scope.
+- Pressed / hover: Phase 4 (no sidebar press state in the artboard).
+- Disabled: n/a.
 
 ## Responsive notes
 
-_Per-screen deviations from [03-RESPONSIVE-RULES.md](../../03-RESPONSIVE-RULES.md).
-Which fixed dimensions were kept and why; which became flexible; where the
-scroll boundary sits._
-
-- Scroll region:
-- Kept fixed:
-- Made flexible:
-- Behaviour at 320 px / 900 px:
+- Scroll region: `BizShell`'s content pane (Rule 3). The shell lays the
+  screen out with a tight height of at least the pane's inner height, so the
+  cards row (an `Expanded`, matching the artboard's `flex:1` body) fills the
+  pane at the reference size and content taller than the pane scrolls.
+- Kept fixed: sidebar 220 (Rule 5), 56 px time column, 3 px stat accents.
+- Made flexible: pane padding `26px 32px` (from the artboard, kept as a local
+  constant because `AxSpace.bizContentPadding` holds the pair transposed);
+  the two cards stretch at `flex 14:10`; at 1440 the pane grows and the cards
+  stretch with it (no max-width here — Rule 12's "max-width the tables at
+  1160" targets table screens).
+- Behaviour at 900 px: sidebar stays, content compresses (stat labels wrap,
+  tiles equalize via stretch). Below 900 px: the documented "Use a larger
+  screen" panel (BUILD_PLAN.md § Known gaps).
 
 ## Open questions
 
-_Things the artboard does not answer. Raise them rather than inventing an answer
-silently._
-
-- [ ]
+- [ ] `5.0 ★` — the star is a text glyph (`&#9733;`); Manrope lacks U+2605,
+  so real platforms fall back to a system symbol font (Segoe UI Symbol on
+  Windows) and `flutter test` renders it as a test-font box. Accepted as-is.
+- [ ] Recent reviews shows exactly one review in the artboard — built as a
+  single review, not a list. Is a list intended?
+- [ ] The bell has no artboard target — left inert.
+- [ ] `AxSpace.bizContentPadding` is transposed (h 26 / v 32 vs the
+  artboard's `padding:26px 32px` = v 26 / h 32); BizShell uses a cited local
+  constant until the token is fixed.
+- [ ] `AxSidebar` brand-block overflow — promote the `Expanded` fix from the
+  local `BizSidebar` clone into `design/widgets/ax_sidebar.dart`.
 
 ## Acceptance criteria
 
-- [ ] Golden passes at the reference size
-- [ ] No overflow across the responsive matrix
-- [ ] No overflow at `textScaler: 1.3`
-- [ ] Every string from the copy inventory present, character for character
-- [ ] All icons are `AxIcons` / `AxArt`, no Material substitutes
-- [ ] No literal colours or font sizes outside `design/tokens/`
+- [x] Golden passes at the reference size
+- [x] No overflow across the responsive matrix
+- [x] No overflow at `textScaler: 1.3`
+- [x] Every string from the copy inventory present, character for character
+- [x] All icons are `AxIcons` / `AxArt`, no Material substitutes
+- [x] No literal colours or font sizes outside `design/tokens/`
 - [ ] Layer-2 side-by-side reviewed and signed off
