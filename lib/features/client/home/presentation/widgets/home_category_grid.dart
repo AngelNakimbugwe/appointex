@@ -14,19 +14,26 @@ class HomeCategoryGrid extends StatelessWidget {
     required this.heading,
     required this.categories,
     required this.eventLabel,
+    this.onCategoryTap,
     this.onEventTap,
   });
 
   final String heading;
   final List<HomeCategory> categories;
   final String eventLabel;
+  final void Function(HomeCategory category)? onCategoryTap;
   final VoidCallback? onEventTap;
 
   int get _cellCount => categories.length + 1;
 
   Widget _cell(int index) {
     if (index < categories.length) {
-      return _CategoryTile(category: categories[index]);
+      return _CategoryTile(
+        category: categories[index],
+        onTap: onCategoryTap == null
+            ? null
+            : () => onCategoryTap!(categories[index]),
+      );
     }
     return _EventTile(label: eventLabel, onTap: onEventTap);
   }
@@ -62,36 +69,41 @@ class HomeCategoryGrid extends StatelessWidget {
 }
 
 class _CategoryTile extends StatelessWidget {
-  const _CategoryTile({required this.category});
+  const _CategoryTile({required this.category, this.onTap});
 
   final HomeCategory category;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AxSpace.s6,
-        vertical: AxSpace.s14,
-      ),
-      decoration: BoxDecoration(
-        color: category.background,
-        borderRadius: const BorderRadius.all(Radius.circular(AxRadius.tile)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        spacing: AxSpace.s6,
-        children: [
-          AxIcon(category.icon, size: 20, color: category.iconColor),
-          Text(
-            category.label,
-            textAlign: TextAlign.center,
-            style: AxType.text(
-              AxType.captionSm,
-              weight: FontWeight.w700,
-              color: category.labelColor,
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AxSpace.s6,
+          vertical: AxSpace.s14,
+        ),
+        decoration: BoxDecoration(
+          color: category.background,
+          borderRadius: const BorderRadius.all(Radius.circular(AxRadius.tile)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          spacing: AxSpace.s6,
+          children: [
+            AxIcon(category.icon, size: 20, color: category.iconColor),
+            Text(
+              category.label,
+              textAlign: TextAlign.center,
+              style: AxType.text(
+                AxType.captionSm,
+                weight: FontWeight.w700,
+                color: category.labelColor,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

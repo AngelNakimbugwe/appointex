@@ -15,8 +15,31 @@ import 'widgets/search_result_row.dart';
 /// Client_Search — search results (`/search`). The user reviews filter chips,
 /// a "Featured in Makeup" carousel and the full result list, drilling into any
 /// provider for detail and booking.
-class SearchScreen extends StatelessWidget {
-  const SearchScreen({super.key});
+class SearchScreen extends StatefulWidget {
+  const SearchScreen({super.key, this.initialCategory});
+
+  /// Category label passed from the home grid (`/search?category=Hair`).
+  /// Rendered as a pre-selected chip ahead of the default filter chips.
+  final String? initialCategory;
+
+  @override
+  State<SearchScreen> createState() => _SearchScreenState();
+}
+
+class _SearchScreenState extends State<SearchScreen> {
+  /// The category chip is prepended unless it already exists in the default
+  /// chip set, so the label never renders twice.
+  late final List<SearchChip> _chips =
+      widget.initialCategory == null ||
+              kSearchChips.any((c) => c.label == widget.initialCategory)
+          ? kSearchChips
+          : [
+              SearchChip(label: widget.initialCategory!, selected: true),
+              ...kSearchChips,
+            ];
+
+  late final Set<String> _selected =
+      _chips.where((c) => c.selected).map((c) => c.label).toSet();
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +54,14 @@ class SearchScreen extends StatelessWidget {
                   ? context.pop()
                   : context.go(AxRoutes.home),
             ),
-            const _FilterChipRow(),
+            _FilterChipRow(
+              chips: _chips,
+              selected: _selected,
+              onToggle: (label) =>
+                  setState(() => _selected.contains(label)
+                      ? _selected.remove(label)
+                      : _selected.add(label)),
+            ),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(
@@ -111,7 +141,15 @@ class _Header extends StatelessWidget {
 /// Artboard lines 26–31: `padding:14px 16px`, chips in a horizontal scroller —
 /// `white-space: nowrap` on `.chip` means the row scrolls, never wraps.
 class _FilterChipRow extends StatelessWidget {
-  const _FilterChipRow();
+  const _FilterChipRow({
+    required this.chips,
+    required this.selected,
+    this.onToggle,
+  });
+
+  final List<SearchChip> chips;
+  final Set<String> selected;
+  final ValueChanged<String>? onToggle;
 
   @override
   Widget build(BuildContext context) {
@@ -125,8 +163,12 @@ class _FilterChipRow extends StatelessWidget {
         child: Row(
           spacing: AxSpace.s8,
           children: [
-            for (final chip in kSearchChips)
-              AxChip(label: chip.label, selected: chip.selected),
+            for (final chip in chips)
+              AxChip(
+                label: chip.label,
+                selected: selected.contains(chip.label),
+                onTap: onToggle == null ? null : () => onToggle!(chip.label),
+              ),
           ],
         ),
       ),

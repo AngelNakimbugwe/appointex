@@ -83,4 +83,15 @@ void main() {
       },
     );
   }
+
+  testWidgets('Client_Search renders a passed category as a selected chip', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    await tester.pumpWidget(harness(const SearchScreen(initialCategory: 'Hair')));
+    await precacheIcons(tester);
+    await tester.pumpAndSettle();
+    expect(find.text('Hair'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 }

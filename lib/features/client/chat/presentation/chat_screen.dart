@@ -273,7 +273,7 @@ class _BlockedNotice extends StatelessWidget {
   }
 }
 
-class _Composer extends StatelessWidget {
+class _Composer extends StatefulWidget {
   const _Composer({required this.note, required this.placeholder});
 
   static const double _fieldHeight = 42; // height:42px — Client_Chat.dc.html line 55
@@ -281,6 +281,24 @@ class _Composer extends StatelessWidget {
 
   final String note;
   final String placeholder;
+
+  @override
+  State<_Composer> createState() => _ComposerState();
+}
+
+class _ComposerState extends State<_Composer> {
+  final TextEditingController _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _send() {
+    if (_controller.text.trim().isEmpty) return;
+    _controller.clear();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -305,7 +323,7 @@ class _Composer extends StatelessWidget {
               const AxIcon(AxIcons.lock24, size: 11, color: AxColors.textFaint),
               Expanded(
                 child: Text(
-                  note,
+                  widget.note,
                   style: AxType.text(AxType.microSm, color: AxColors.textFaint),
                 ),
               ),
@@ -316,33 +334,49 @@ class _Composer extends StatelessWidget {
             children: [
               Expanded(
                 child: Container(
-                  height: _fieldHeight,
+                  height: _Composer._fieldHeight,
                   padding: const EdgeInsets.symmetric(
                     horizontal: AxSpace.s16,
                   ),
-                  alignment: AlignmentDirectional.centerStart,
                   decoration: const ShapeDecoration(
                     color: AxColors.panelNeutral,
                     shape: StadiumBorder(),
                   ),
-                  child: Text(
-                    placeholder,
+                  child: TextField(
+                    controller: _controller,
+                    cursorColor: AxColors.brand,
                     style: AxType.text(
                       AxType.labelSm,
-                      color: AxColors.textFaint,
+                      color: AxColors.textPrimary,
+                    ),
+                    decoration: InputDecoration(
+                      isCollapsed: true,
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                        vertical: 11.5,
+                      ),
+                      hintText: widget.placeholder,
+                      hintStyle: AxType.text(
+                        AxType.labelSm,
+                        color: AxColors.textFaint,
+                      ),
                     ),
                   ),
                 ),
               ),
-              Container(
-                width: _sendButtonSize,
-                height: _sendButtonSize,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AxColors.salmon,
-                ),
-                child: const Center(
-                  child: AxIcon(AxIcons.send, size: 16, color: AxColors.brand),
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: _send,
+                child: Container(
+                  width: _Composer._sendButtonSize,
+                  height: _Composer._sendButtonSize,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AxColors.salmon,
+                  ),
+                  child: const Center(
+                    child: AxIcon(AxIcons.send, size: 16, color: AxColors.brand),
+                  ),
                 ),
               ),
             ],

@@ -14,13 +14,22 @@ import '../data/fixtures.dart';
 /// Client_Checkout (`/checkout`) — the pay leg of the booking flow. The user
 /// confirms where the appointment happens, reviews the itemised total
 /// (rush and mobile fees included), picks a mobile-money wallet and confirms.
-class CheckoutScreen extends StatelessWidget {
+class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({super.key, this.checkout = kCheckout});
 
   final Checkout checkout;
 
   @override
+  State<CheckoutScreen> createState() => _CheckoutScreenState();
+}
+
+class _CheckoutScreenState extends State<CheckoutScreen> {
+  late int _selectedMethod =
+      widget.checkout.methods.indexWhere((m) => m.selected);
+
+  @override
   Widget build(BuildContext context) {
+    final checkout = widget.checkout;
     return Scaffold(
       backgroundColor: AxColors.surface,
       body: SafeArea(
@@ -39,9 +48,17 @@ class CheckoutScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   spacing: AxSpace.s14,
                   children: [
-                    _LocationCard(checkout: checkout),
+                    _LocationCard(
+                      checkout: checkout,
+                      onChange: () => context.go(AxRoutes.book),
+                    ),
                     _CostCard(checkout: checkout),
-                    _PaySection(checkout: checkout),
+                    _PaySection(
+                      checkout: checkout,
+                      selectedIndex: _selectedMethod,
+                      onSelect: (index) =>
+                          setState(() => _selectedMethod = index),
+                    ),
                     _SecurityNotes(notes: checkout.notes),
                   ],
                 ),
@@ -102,9 +119,10 @@ class _HeaderBar extends StatelessWidget {
 
 /// The escrow-tinted location strip — lines 24–33.
 class _LocationCard extends StatelessWidget {
-  const _LocationCard({required this.checkout});
+  const _LocationCard({required this.checkout, this.onChange});
 
   final Checkout checkout;
+  final VoidCallback? onChange;
 
   @override
   Widget build(BuildContext context) {
@@ -151,12 +169,16 @@ class _LocationCard extends StatelessWidget {
               ],
             ),
           ),
-          Text(
-            checkout.changeLabel,
-            style: AxType.text(
-              AxType.captionSm,
-              weight: FontWeight.w700,
-              color: AxColors.escrow,
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: onChange,
+            child: Text(
+              checkout.changeLabel,
+              style: AxType.text(
+                AxType.captionSm,
+                weight: FontWeight.w700,
+                color: AxColors.escrow,
+              ),
             ),
           ),
         ],
@@ -276,9 +298,15 @@ class _Rule extends StatelessWidget {
 
 /// "Pay with" — wallet picker and number field, lines 46–64.
 class _PaySection extends StatelessWidget {
-  const _PaySection({required this.checkout});
+  const _PaySection({
+    required this.checkout,
+    required this.selectedIndex,
+    this.onSelect,
+  });
 
   final Checkout checkout;
+  final int selectedIndex;
+  final ValueChanged<int>? onSelect;
 
   @override
   Widget build(BuildContext context) {
@@ -290,7 +318,12 @@ class _PaySection extends StatelessWidget {
           checkout.payWithLabel,
           style: AxType.head(AxType.bodySm, color: AxColors.brand),
         ),
-        for (final method in checkout.methods) _MethodRow(method: method),
+        for (var i = 0; i < checkout.methods.length; i++)
+          _MethodRow(
+            method: checkout.methods[i],
+            selected: i == selectedIndex,
+            onTap: onSelect == null ? null : () => onSelect!(i),
+          ),
         Padding(
           padding: const EdgeInsets.only(top: AxSpace.s2),
           child: _NumberField(
@@ -304,7 +337,11 @@ class _PaySection extends StatelessWidget {
 }
 
 class _MethodRow extends StatelessWidget {
-  const _MethodRow({required this.method});
+  const _MethodRow({
+    required this.method,
+    required this.selected,
+    this.onTap,
+  });
 
   static const double _brandTileWidth = 34; // Client_Checkout.dc.html:49
   static const double _brandTileHeight = 24; // Client_Checkout.dc.html:49
@@ -312,65 +349,70 @@ class _MethodRow extends StatelessWidget {
   static const double _radioSize = 18; // Client_Checkout.dc.html:51
 
   final CheckoutPaymentMethod method;
+  final bool selected;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    final selected = method.selected;
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AxSpace.s14,
-        vertical: AxSpace.s13,
-      ),
-      decoration: BoxDecoration(
-        borderRadius: const BorderRadius.all(Radius.circular(AxRadius.card)),
-        border: Border.all(
-          color: selected ? AxColors.brand : AxColors.borderStrong,
-          width: selected ? 2 : 1,
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AxSpace.s14,
+          vertical: AxSpace.s13,
         ),
-      ),
-      child: Row(
-        spacing: AxSpace.s12,
-        children: [
-          Container(
-            width: _brandTileWidth,
-            height: _brandTileHeight,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: method.brandBackground,
-              borderRadius:
-                  const BorderRadius.all(Radius.circular(_brandTileRadius)),
-            ),
-            child: Text(
-              method.brand,
-              style: AxType.text(
-                method.brandSize,
-                weight: FontWeight.w800,
-                color: method.brandForeground,
+        decoration: BoxDecoration(
+          borderRadius: const BorderRadius.all(Radius.circular(AxRadius.card)),
+          border: Border.all(
+            color: selected ? AxColors.brand : AxColors.borderStrong,
+            width: selected ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          spacing: AxSpace.s12,
+          children: [
+            Container(
+              width: _brandTileWidth,
+              height: _brandTileHeight,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: method.brandBackground,
+                borderRadius:
+                    const BorderRadius.all(Radius.circular(_brandTileRadius)),
+              ),
+              child: Text(
+                method.brand,
+                style: AxType.text(
+                  method.brandSize,
+                  weight: FontWeight.w800,
+                  color: method.brandForeground,
+                ),
               ),
             ),
-          ),
-          Expanded(
-            child: Text(
-              method.label,
-              style: AxType.text(
-                AxType.label,
-                weight: FontWeight.w600,
-                color: selected ? AxColors.brand : AxColors.textPrimary,
+            Expanded(
+              child: Text(
+                method.label,
+                style: AxType.text(
+                  AxType.label,
+                  weight: FontWeight.w600,
+                  color: selected ? AxColors.brand : AxColors.textPrimary,
+                ),
               ),
             ),
-          ),
-          Container(
-            width: _radioSize,
-            height: _radioSize,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: selected ? AxColors.brand : AxColors.dividerMid,
-                width: selected ? 5.5 : 1.5,
+            Container(
+              width: _radioSize,
+              height: _radioSize,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: selected ? AxColors.brand : AxColors.dividerMid,
+                  width: selected ? 5.5 : 1.5,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

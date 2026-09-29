@@ -47,14 +47,24 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         (firebaseUser.displayName?.trim().isNotEmpty ?? false)
             ? firebaseUser.displayName!.trim()
             : 'New client';
-    await ref.read(userRepositoryProvider).createIfMissing(
-          uid: firebaseUser.uid,
-          role: AppUserRole.client,
-          displayName: displayName,
-          phoneNumber: firebaseUser.phoneNumber,
-          email: firebaseUser.email,
-          photoUrl: firebaseUser.photoUrl,
+    try {
+      await ref.read(userRepositoryProvider).createIfMissing(
+            uid: firebaseUser.uid,
+            role: AppUserRole.client,
+            displayName: displayName,
+            phoneNumber: firebaseUser.phoneNumber,
+            email: firebaseUser.email,
+            photoUrl: firebaseUser.photoUrl,
+          );
+    } catch (err) {
+      _handledSignIn = false;
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not load your profile: $err')),
         );
+      }
+      return;
+    }
     if (mounted) ref.invalidate(currentAppUserProvider);
   }
 

@@ -12,13 +12,27 @@ import '../../../../design/tokens/ax_type.dart';
 import '../data/fixtures.dart';
 import 'widgets/month_picker.dart';
 
-class BookScreen extends StatelessWidget {
+class BookScreen extends StatefulWidget {
   const BookScreen({super.key, this.appointment = kBookAppointment});
 
   final BookAppointment appointment;
 
   @override
+  State<BookScreen> createState() => _BookScreenState();
+}
+
+class _BookScreenState extends State<BookScreen> {
+  late int _selectedLocation =
+      widget.appointment.locations.indexWhere((o) => o.selected);
+  late int _selectedDay = widget.appointment.days
+      .indexWhere((d) => d.state == BookDayState.selected);
+  late String _selectedSlot = widget.appointment.slots
+      .firstWhere((s) => s.state == BookSlotState.selected)
+      .label;
+
+  @override
   Widget build(BuildContext context) {
+    final appointment = widget.appointment;
     return Scaffold(
       backgroundColor: AxColors.surface,
       body: SafeArea(
@@ -41,14 +55,25 @@ class BookScreen extends StatelessWidget {
                     _LocationSection(
                       title: appointment.locationTitle,
                       options: appointment.locations,
+                      selectedIndex: _selectedLocation,
+                      onSelect: (index) =>
+                          setState(() => _selectedLocation = index),
                     ),
                     BookMonthPicker(
                       monthLabel: appointment.monthLabel,
                       weekdays: appointment.weekdays,
                       days: appointment.days,
                       legend: appointment.legend,
+                      selectedDay: _selectedDay,
+                      onDaySelect: (index) =>
+                          setState(() => _selectedDay = index),
                     ),
-                    _TimeSlots(title: appointment.timesTitle, slots: appointment.slots),
+                    _TimeSlots(
+                      title: appointment.timesTitle,
+                      slots: appointment.slots,
+                      selectedLabel: _selectedSlot,
+                      onSelect: (label) => setState(() => _selectedSlot = label),
+                    ),
                     _SummaryCard(appointment: appointment),
                   ],
                 ),
@@ -131,10 +156,17 @@ class _RushPill extends StatelessWidget {
 }
 
 class _LocationSection extends StatelessWidget {
-  const _LocationSection({required this.title, required this.options});
+  const _LocationSection({
+    required this.title,
+    required this.options,
+    required this.selectedIndex,
+    this.onSelect,
+  });
 
   final String title;
   final List<BookLocationOption> options;
+  final int selectedIndex;
+  final ValueChanged<int>? onSelect;
 
   @override
   Widget build(BuildContext context) {
@@ -149,7 +181,14 @@ class _LocationSection extends StatelessWidget {
         Row(
           spacing: AxSpace.s9,
           children: [
-            for (final option in options) Expanded(child: _LocationCard(option: option)),
+            for (var i = 0; i < options.length; i++)
+              Expanded(
+                child: _LocationCard(
+                  option: options[i],
+                  selected: i == selectedIndex,
+                  onTap: onSelect == null ? null : () => onSelect!(i),
+                ),
+              ),
           ],
         ),
       ],
@@ -158,55 +197,71 @@ class _LocationSection extends StatelessWidget {
 }
 
 class _LocationCard extends StatelessWidget {
-  const _LocationCard({required this.option});
+  const _LocationCard({
+    required this.option,
+    required this.selected,
+    this.onTap,
+  });
 
   final BookLocationOption option;
+  final bool selected;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    final selected = option.selected;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AxSpace.s6, vertical: AxSpace.s9),
-      decoration: BoxDecoration(
-        color: selected ? AxColors.escrowBg : null,
-        borderRadius: const BorderRadius.all(Radius.circular(AxRadius.card)),
-        border: Border.all(
-          color: selected ? AxColors.escrow : AxColors.borderStrong,
-          width: selected ? 2 : 1,
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: AxSpace.s6, vertical: AxSpace.s9),
+        decoration: BoxDecoration(
+          color: selected ? AxColors.escrowBg : null,
+          borderRadius: const BorderRadius.all(Radius.circular(AxRadius.card)),
+          border: Border.all(
+            color: selected ? AxColors.escrow : AxColors.borderStrong,
+            width: selected ? 2 : 1,
+          ),
         ),
-      ),
-      child: Column(
-        spacing: AxSpace.s3,
-        children: [
-          AxIcon(
-            option.icon,
-            size: 15,
-            color: selected ? AxColors.escrow : AxColors.textSubtle,
-          ),
-          Text(
-            option.label,
-            textAlign: TextAlign.center,
-            style: selected
-                ? AxType.text(AxType.micro, weight: FontWeight.w700, color: AxColors.escrow)
-                : AxType.text(AxType.micro, weight: FontWeight.w600, color: AxColors.textBody),
-          ),
-          if (option.note != null)
-            Text(
-              option.note!,
-              textAlign: TextAlign.center,
-              style: AxType.text(9, weight: FontWeight.w700, color: AxColors.escrow),
+        child: Column(
+          spacing: AxSpace.s3,
+          children: [
+            AxIcon(
+              option.icon,
+              size: 15,
+              color: selected ? AxColors.escrow : AxColors.textSubtle,
             ),
-        ],
+            Text(
+              option.label,
+              textAlign: TextAlign.center,
+              style: selected
+                  ? AxType.text(AxType.micro, weight: FontWeight.w700, color: AxColors.escrow)
+                  : AxType.text(AxType.micro, weight: FontWeight.w600, color: AxColors.textBody),
+            ),
+            if (option.note != null)
+              Text(
+                option.note!,
+                textAlign: TextAlign.center,
+                style: AxType.text(9, weight: FontWeight.w700, color: AxColors.escrow),
+              ),
+          ],
+        ),
       ),
     );
   }
 }
 
 class _TimeSlots extends StatelessWidget {
-  const _TimeSlots({required this.title, required this.slots});
+  const _TimeSlots({
+    required this.title,
+    required this.slots,
+    required this.selectedLabel,
+    this.onSelect,
+  });
 
   final String title;
   final List<BookSlot> slots;
+  final String selectedLabel;
+  final ValueChanged<String>? onSelect;
 
   @override
   Widget build(BuildContext context) {
@@ -226,7 +281,17 @@ class _TimeSlots extends StatelessWidget {
                 spacing: AxSpace.s8,
                 children: [
                   for (final slot in slots.skip(i).take(3))
-                    Expanded(child: _SlotChip(slot: slot)),
+                    Expanded(
+                      child: _SlotChip(
+                        slot: slot,
+                        selected: slot.label == selectedLabel,
+                        onTap: slot.state == BookSlotState.disabled
+                            ? null
+                            : onSelect == null
+                                ? null
+                                : () => onSelect!(slot.label),
+                      ),
+                    ),
                 ],
               ),
           ],
@@ -237,32 +302,37 @@ class _TimeSlots extends StatelessWidget {
 }
 
 class _SlotChip extends StatelessWidget {
-  const _SlotChip({required this.slot});
+  const _SlotChip({required this.slot, required this.selected, this.onTap});
 
   final BookSlot slot;
+  final bool selected;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    final selected = slot.state == BookSlotState.selected;
     final disabled = slot.state == BookSlotState.disabled;
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: AxSpace.s11),
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: selected ? AxColors.salmon : null,
-        borderRadius: const BorderRadius.all(Radius.circular(AxRadius.xl)),
-        border: selected ? null : Border.all(color: AxColors.borderStrong),
-      ),
-      child: Text(
-        slot.label,
-        textAlign: TextAlign.center,
-        style: selected
-            ? AxType.text(AxType.labelSm, weight: FontWeight.w700, color: AxColors.brand)
-            : AxType.text(
-                AxType.labelSm,
-                weight: FontWeight.w600,
-                color: disabled ? AxColors.dividerMid : AxColors.textPrimary,
-              ),
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: AxSpace.s11),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: selected ? AxColors.salmon : null,
+          borderRadius: const BorderRadius.all(Radius.circular(AxRadius.xl)),
+          border: selected ? null : Border.all(color: AxColors.borderStrong),
+        ),
+        child: Text(
+          slot.label,
+          textAlign: TextAlign.center,
+          style: selected
+              ? AxType.text(AxType.labelSm, weight: FontWeight.w700, color: AxColors.brand)
+              : AxType.text(
+                  AxType.labelSm,
+                  weight: FontWeight.w600,
+                  color: disabled ? AxColors.dividerMid : AxColors.textPrimary,
+                ),
+        ),
       ),
     );
   }

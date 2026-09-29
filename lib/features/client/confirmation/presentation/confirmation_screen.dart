@@ -63,6 +63,7 @@ class ConfirmationScreen extends StatelessWidget {
                       primaryLabel: confirmation.primaryLabel,
                       secondaryLabel: confirmation.secondaryLabel,
                       onPrimary: () => context.go(AxRoutes.bookings),
+                      onSecondary: () => context.go(AxRoutes.home),
                     ),
                   ),
                 ],
@@ -289,6 +290,7 @@ class _Buttons extends StatelessWidget {
     required this.primaryLabel,
     required this.secondaryLabel,
     required this.onPrimary,
+    this.onSecondary,
   });
 
   static const double _buttonHeight = 48; // Client_Confirmation.dc.html:44
@@ -296,6 +298,7 @@ class _Buttons extends StatelessWidget {
   final String primaryLabel;
   final String secondaryLabel;
   final VoidCallback onPrimary;
+  final VoidCallback? onSecondary;
 
   @override
   Widget build(BuildContext context) {
@@ -314,7 +317,7 @@ class _Buttons extends StatelessWidget {
           height: _buttonHeight,
           labelSize: AxType.body14,
           style: AxButtonStyle.outline,
-          onPressed: () {},
+          onPressed: onSecondary,
         ),
       ],
     );

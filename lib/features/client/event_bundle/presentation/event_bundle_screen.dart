@@ -18,13 +18,22 @@ import '../data/fixtures.dart';
 /// Client_EventBundle — plan an event (`/event`). The user names the event
 /// type, sees the date and the assembled provider team, and reviews the
 /// bundle total before paying.
-class EventBundleScreen extends StatelessWidget {
+class EventBundleScreen extends StatefulWidget {
   const EventBundleScreen({super.key, this.bundle = kEventBundle});
 
   final EventBundle bundle;
 
   @override
+  State<EventBundleScreen> createState() => _EventBundleScreenState();
+}
+
+class _EventBundleScreenState extends State<EventBundleScreen> {
+  late int _selectedType =
+      widget.bundle.types.indexWhere((t) => t.selected);
+
+  @override
   Widget build(BuildContext context) {
+    final bundle = widget.bundle;
     return Scaffold(
       backgroundColor: AxColors.surface,
       body: SafeArea(
@@ -43,10 +52,16 @@ class EventBundleScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   spacing: AxSpace.s20,
                   children: [
-                    _IntroSection(bundle: bundle),
+                    _IntroSection(
+                      bundle: bundle,
+                      selectedIndex: _selectedType,
+                      onSelect: (index) =>
+                          setState(() => _selectedType = index),
+                    ),
                     _DateCard(
                       dateLabel: bundle.dateLabel,
                       changeLabel: bundle.changeLabel,
+                      onChange: () => context.go(AxRoutes.book),
                     ),
                     _TeamSection(bundle: bundle),
                   ],
@@ -109,9 +124,15 @@ class _HeaderBar extends StatelessWidget {
 /// Intro line + the `.etype` chip row (lines 25–33), horizontally scrollable
 /// per docs/04 §AxChip.
 class _IntroSection extends StatelessWidget {
-  const _IntroSection({required this.bundle});
+  const _IntroSection({
+    required this.bundle,
+    required this.selectedIndex,
+    this.onSelect,
+  });
 
   final EventBundle bundle;
+  final int selectedIndex;
+  final ValueChanged<int>? onSelect;
 
   @override
   Widget build(BuildContext context) {
@@ -128,11 +149,12 @@ class _IntroSection extends StatelessWidget {
           child: Row(
             spacing: AxSpace.s8,
             children: [
-              for (final type in bundle.types)
+              for (var i = 0; i < bundle.types.length; i++)
                 AxChip(
-                  label: type.label,
-                  selected: type.selected,
+                  label: bundle.types[i].label,
+                  selected: i == selectedIndex,
                   type: true,
+                  onTap: onSelect == null ? null : () => onSelect!(i),
                 ),
             ],
           ),
@@ -144,10 +166,15 @@ class _IntroSection extends StatelessWidget {
 
 /// The date strip — lines 35–41.
 class _DateCard extends StatelessWidget {
-  const _DateCard({required this.dateLabel, required this.changeLabel});
+  const _DateCard({
+    required this.dateLabel,
+    required this.changeLabel,
+    this.onChange,
+  });
 
   final String dateLabel;
   final String changeLabel;
+  final VoidCallback? onChange;
 
   @override
   Widget build(BuildContext context) {
@@ -181,12 +208,16 @@ class _DateCard extends StatelessWidget {
               ],
             ),
           ),
-          Text(
-            changeLabel,
-            style: AxType.text(
-              AxType.caption,
-              weight: FontWeight.w700,
-              color: AxColors.brandMid,
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: onChange,
+            child: Text(
+              changeLabel,
+              style: AxType.text(
+                AxType.caption,
+                weight: FontWeight.w700,
+                color: AxColors.brandMid,
+              ),
             ),
           ),
         ],

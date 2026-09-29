@@ -57,6 +57,10 @@ class HomeScreen extends StatelessWidget {
                         heading: kHomeCategoriesHeading,
                         categories: kHomeCategories,
                         eventLabel: kHomeEventTileLabel,
+                        onCategoryTap: (category) => context.go(
+                          '${AxRoutes.search}'
+                          '?category=${Uri.encodeComponent(category.label)}',
+                        ),
                         onEventTap: () => context.go(AxRoutes.event),
                       ),
                     ),

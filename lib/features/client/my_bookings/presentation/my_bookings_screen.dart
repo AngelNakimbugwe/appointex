@@ -14,10 +14,17 @@ import '../data/fixtures.dart';
 /// confirmed status pill, a PAST section, and one past card carrying rebook /
 /// review actions. Tabs are visual (the artboard is static); filtering is
 /// Phase 4.
-class MyBookingsScreen extends StatelessWidget {
+class MyBookingsScreen extends StatefulWidget {
   const MyBookingsScreen({super.key});
 
+  @override
+  State<MyBookingsScreen> createState() => _MyBookingsScreenState();
+}
+
+class _MyBookingsScreenState extends State<MyBookingsScreen> {
   static const double _pastSectionTopGap = 6; // margin-top:6px — Client_MyBookings.dc.html line 52
+
+  int _activeTab = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -43,13 +50,22 @@ class MyBookingsScreen extends StatelessWidget {
                 ),
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.fromLTRB(AxSpace.s18, AxSpace.s10, AxSpace.s18, 0),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(AxSpace.s18, AxSpace.s10, AxSpace.s18, 0),
               child: Row(
                 spacing: AxSpace.s22,
                 children: [
-                  _BookingTab(label: kMyBookingsUpcomingTab, active: true),
-                  _BookingTab(label: kMyBookingsPastTab, active: false),
+                  for (var i = 0; i < 2; i++)
+                    GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => setState(() => _activeTab = i),
+                      child: _BookingTab(
+                        label: i == 0
+                            ? kMyBookingsUpcomingTab
+                            : kMyBookingsPastTab,
+                        active: i == _activeTab,
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -324,8 +340,11 @@ class _PastBookingCard extends StatelessWidget {
                 spacing: _actionsGap,
                 runSpacing: _actionsGap,
                 children: [
-                  _GradientActionPill(label: kMyBookingsRebookLabel),
-                  _OutlineActionPill(label: kMyBookingsReviewLabel),
+                  _GradientActionPill(
+                    label: kMyBookingsRebookLabel,
+                    onTap: () => context.go(AxRoutes.book),
+                  ),
+                  const _OutlineActionPill(label: kMyBookingsReviewLabel),
                 ],
               ),
             ),
@@ -337,27 +356,32 @@ class _PastBookingCard extends StatelessWidget {
 }
 
 class _GradientActionPill extends StatelessWidget {
-  const _GradientActionPill({required this.label});
+  const _GradientActionPill({required this.label, this.onTap});
 
   final String label;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AxSpace.s14,
-        vertical: AxSpace.s8,
-      ),
-      decoration: const BoxDecoration(
-        gradient: AxGradients.avatarPeach,
-        borderRadius: BorderRadius.all(Radius.circular(AxRadius.lg)),
-      ),
-      child: Text(
-        label,
-        style: AxType.text(
-          AxType.caption,
-          weight: FontWeight.w700,
-          color: AxColors.brand,
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AxSpace.s14,
+          vertical: AxSpace.s8,
+        ),
+        decoration: const BoxDecoration(
+          gradient: AxGradients.avatarPeach,
+          borderRadius: BorderRadius.all(Radius.circular(AxRadius.lg)),
+        ),
+        child: Text(
+          label,
+          style: AxType.text(
+            AxType.caption,
+            weight: FontWeight.w700,
+            color: AxColors.brand,
+          ),
         ),
       ),
     );

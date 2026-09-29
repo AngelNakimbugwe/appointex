@@ -47,19 +47,31 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     super.dispose();
   }
 
+  // Guards every auth action so a double-tap can't fire a second Firebase
+  // request while one is already in flight.
+  bool get _busy {
+    final status = ref.read(authControllerProvider).status;
+    return status == AuthFlowStatus.sendingCode ||
+        status == AuthFlowStatus.verifyingCode ||
+        status == AuthFlowStatus.signingInWithGoogle;
+  }
+
   Future<void> _onCreateAccountPressed() async {
+    if (_busy) return;
     final phone = _phoneController.text.trim();
     if (phone.isEmpty) return;
     await ref.read(authControllerProvider.notifier).sendOtp(phone);
   }
 
   Future<void> _onVerifyPressed() async {
+    if (_busy) return;
     final code = _otpController.text.trim();
     if (code.isEmpty) return;
     await ref.read(authControllerProvider.notifier).verifyOtp(code);
   }
 
   Future<void> _onGooglePressed() async {
+    if (_busy) return;
     if (kIsWeb || Platform.isAndroid || Platform.isIOS) {
       await ref.read(authControllerProvider.notifier).signInWithGoogle();
       return;
@@ -78,6 +90,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     }
   }
 
+  // A sign-in started here (OTP or Google) must not strand a brand-new user
+  // on the auth screen: the router only redirects once a Firestore profile
+  // exists, so create it (a no-op for returning users) and let the router's
+  // own redirect own the destination.
   Future<void> _handleSignedIn(AuthUser firebaseUser) async {
     if (_handledSignIn) return;
     _handledSignIn = true;
@@ -85,15 +101,25 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final displayName = (firebaseUser.displayName?.trim().isNotEmpty ?? false)
         ? firebaseUser.displayName!.trim()
         : (typedName.isNotEmpty ? typedName : 'New client');
-    await ref.read(userRepositoryProvider).createIfMissing(
-          uid: firebaseUser.uid,
-          role: AppUserRole.client,
-          displayName: displayName,
-          phoneNumber: firebaseUser.phoneNumber,
-          email: firebaseUser.email,
-          photoUrl: firebaseUser.photoUrl,
+    try {
+      await ref.read(userRepositoryProvider).createIfMissing(
+            uid: firebaseUser.uid,
+            role: AppUserRole.client,
+            displayName: displayName,
+            phoneNumber: firebaseUser.phoneNumber,
+            email: firebaseUser.email,
+            photoUrl: firebaseUser.photoUrl,
+          );
+    } catch (err) {
+      _handledSignIn = false;
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not create your account: $err')),
         );
-    if (mounted) context.go(AxRoutes.home);
+      }
+      return;
+    }
+    if (mounted) ref.invalidate(currentAppUserProvider);
   }
 
   @override

@@ -55,30 +55,52 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         (firebaseUser.displayName?.trim().isNotEmpty ?? false)
             ? firebaseUser.displayName!.trim()
             : 'New client';
-    await ref.read(userRepositoryProvider).createIfMissing(
-          uid: firebaseUser.uid,
-          role: AppUserRole.client,
-          displayName: displayName,
-          phoneNumber: firebaseUser.phoneNumber,
-          email: firebaseUser.email,
-          photoUrl: firebaseUser.photoUrl,
+    try {
+      await ref.read(userRepositoryProvider).createIfMissing(
+            uid: firebaseUser.uid,
+            role: AppUserRole.client,
+            displayName: displayName,
+            phoneNumber: firebaseUser.phoneNumber,
+            email: firebaseUser.email,
+            photoUrl: firebaseUser.photoUrl,
+          );
+    } catch (err) {
+      _handledSignIn = false;
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not load your profile: $err')),
         );
+      }
+      return;
+    }
     if (mounted) ref.invalidate(currentAppUserProvider);
   }
 
+  // Guards every auth action so a double-tap can't fire a second Firebase
+  // request while one is already in flight.
+  bool get _busy {
+    final status = ref.read(authControllerProvider).status;
+    return status == AuthFlowStatus.sendingCode ||
+        status == AuthFlowStatus.verifyingCode ||
+        status == AuthFlowStatus.signingInWithGoogle;
+  }
+
   Future<void> _onLoginPressed() async {
+    if (_busy) return;
     final phone = _phoneController.text.trim();
     if (phone.isEmpty) return;
     await ref.read(authControllerProvider.notifier).sendOtp(phone);
   }
 
   Future<void> _onVerifyPressed() async {
+    if (_busy) return;
     final code = _otpController.text.trim();
     if (code.isEmpty) return;
     await ref.read(authControllerProvider.notifier).verifyOtp(code);
   }
 
   Future<void> _onGooglePressed() async {
+    if (_busy) return;
     if (kIsWeb || Platform.isAndroid || Platform.isIOS) {
       await ref.read(authControllerProvider.notifier).signInWithGoogle();
       return;

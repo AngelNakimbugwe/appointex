@@ -12,7 +12,7 @@ import '../../../../design/tokens/ax_type.dart';
 import '../../../../design/widgets/ax_verified_badge.dart';
 import '../data/fixtures.dart';
 
-class ProviderScreen extends StatelessWidget {
+class ProviderScreen extends StatefulWidget {
   const ProviderScreen({
     super.key,
     this.providerId = '1',
@@ -23,7 +23,19 @@ class ProviderScreen extends StatelessWidget {
   final ProviderProfile profile;
 
   @override
+  State<ProviderScreen> createState() => _ProviderScreenState();
+}
+
+class _ProviderScreenState extends State<ProviderScreen> {
+  late int _activeTab = widget.profile.activeTab;
+  late final Set<String> _selectedServices = widget.profile.services
+      .where((s) => s.selected)
+      .map((s) => s.name)
+      .toSet();
+
+  @override
   Widget build(BuildContext context) {
+    final profile = widget.profile;
     return Scaffold(
       backgroundColor: AxColors.surface,
       body: SafeArea(
@@ -41,8 +53,20 @@ class ProviderScreen extends StatelessWidget {
                   children: [
                     _IdentityBlock(profile: profile),
                     _PortfolioBlock(profile: profile),
-                    _ProfileTabs(tabs: profile.tabs, activeTab: profile.activeTab),
-                    _ServiceList(services: profile.services),
+                    _ProfileTabs(
+                      tabs: profile.tabs,
+                      activeTab: _activeTab,
+                      onTabSelect: (index) =>
+                          setState(() => _activeTab = index),
+                    ),
+                    _ServiceList(
+                      services: profile.services,
+                      selected: _selectedServices,
+                      onToggle: (name) => setState(() =>
+                          _selectedServices.contains(name)
+                              ? _selectedServices.remove(name)
+                              : _selectedServices.add(name)),
+                    ),
                   ],
                 ),
               ),
@@ -50,7 +74,7 @@ class ProviderScreen extends StatelessWidget {
             _FooterBar(
               profile: profile,
               onContinue: () => context.go(
-                AxRoutes.book.replaceFirst(':id', providerId),
+                AxRoutes.book.replaceFirst(':id', widget.providerId),
               ),
             ),
           ],
@@ -279,10 +303,15 @@ class _PortfolioTile extends StatelessWidget {
 }
 
 class _ProfileTabs extends StatelessWidget {
-  const _ProfileTabs({required this.tabs, required this.activeTab});
+  const _ProfileTabs({
+    required this.tabs,
+    required this.activeTab,
+    this.onTabSelect,
+  });
 
   final List<String> tabs;
   final int activeTab;
+  final ValueChanged<int>? onTabSelect;
 
   @override
   Widget build(BuildContext context) {
@@ -298,7 +327,11 @@ class _ProfileTabs extends StatelessWidget {
           spacing: AxSpace.s22,
           children: [
             for (var i = 0; i < tabs.length; i++)
-              _ProfileTab(label: tabs[i], active: i == activeTab),
+              _ProfileTab(
+                label: tabs[i],
+                active: i == activeTab,
+                onTap: onTabSelect == null ? null : () => onTabSelect!(i),
+              ),
           ],
         ),
       ),
@@ -307,41 +340,56 @@ class _ProfileTabs extends StatelessWidget {
 }
 
 class _ProfileTab extends StatelessWidget {
-  const _ProfileTab({required this.label, required this.active});
+  const _ProfileTab({
+    required this.label,
+    required this.active,
+    this.onTap,
+  });
 
   static const double _underlineHeight = 2.5; // Client_Provider.dc.html:65
 
   final String label;
   final bool active;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return IntrinsicWidth(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(bottom: AxSpace.s8),
-            child: Text(
-              label,
-              textAlign: TextAlign.center,
-              style: active
-                  ? AxType.text(AxType.label, weight: FontWeight.w700, color: AxColors.brand)
-                  : AxType.text(AxType.label, weight: FontWeight.w600, color: AxColors.textFaint),
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: IntrinsicWidth(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(bottom: AxSpace.s8),
+              child: Text(
+                label,
+                textAlign: TextAlign.center,
+                style: active
+                    ? AxType.text(AxType.label, weight: FontWeight.w700, color: AxColors.brand)
+                    : AxType.text(AxType.label, weight: FontWeight.w600, color: AxColors.textFaint),
+              ),
             ),
-          ),
-          if (active)
-            Container(height: _underlineHeight, color: AxColors.salmon),
-        ],
+            if (active)
+              Container(height: _underlineHeight, color: AxColors.salmon),
+          ],
+        ),
       ),
     );
   }
 }
 
 class _ServiceList extends StatelessWidget {
-  const _ServiceList({required this.services});
+  const _ServiceList({
+    required this.services,
+    required this.selected,
+    this.onToggle,
+  });
 
   final List<ProviderService> services;
+  final Set<String> selected;
+  final ValueChanged<String>? onToggle;
 
   @override
   Widget build(BuildContext context) {
@@ -351,7 +399,12 @@ class _ServiceList extends StatelessWidget {
         spacing: AxSpace.s12,
         children: [
           for (var i = 0; i < services.length; i++)
-            _ServiceRow(service: services[i], showDivider: i < services.length - 1),
+            _ServiceRow(
+              service: services[i],
+              selected: selected.contains(services[i].name),
+              showDivider: i < services.length - 1,
+              onTap: onToggle == null ? null : () => onToggle!(services[i].name),
+            ),
         ],
       ),
     );
@@ -359,49 +412,60 @@ class _ServiceList extends StatelessWidget {
 }
 
 class _ServiceRow extends StatelessWidget {
-  const _ServiceRow({required this.service, required this.showDivider});
+  const _ServiceRow({
+    required this.service,
+    required this.selected,
+    required this.showDivider,
+    this.onTap,
+  });
 
   final ProviderService service;
+  final bool selected;
   final bool showDivider;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: AxSpace.s12),
-      decoration: BoxDecoration(
-        border: showDivider ? const Border(bottom: BorderSide(color: AxColors.panelWarm)) : null,
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              spacing: AxSpace.s3,
-              children: [
-                Text(
-                  service.name,
-                  style: AxType.text(14, weight: FontWeight.w700, color: AxColors.brand),
-                ),
-                Text(
-                  service.meta,
-                  style: AxType.text(AxType.caption, color: AxColors.textSubtle),
-                ),
-              ],
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: AxSpace.s12),
+        decoration: BoxDecoration(
+          border: showDivider ? const Border(bottom: BorderSide(color: AxColors.panelWarm)) : null,
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                spacing: AxSpace.s3,
+                children: [
+                  Text(
+                    service.name,
+                    style: AxType.text(14, weight: FontWeight.w700, color: AxColors.brand),
+                  ),
+                  Text(
+                    service.meta,
+                    style: AxType.text(AxType.caption, color: AxColors.textSubtle),
+                  ),
+                ],
+              ),
             ),
-          ),
-          Container(
-            width: AxSpace.s26,
-            height: AxSpace.s26,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: service.selected ? AxColors.salmon : AxColors.brand,
+            Container(
+              width: AxSpace.s26,
+              height: AxSpace.s26,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: selected ? AxColors.salmon : AxColors.brand,
+              ),
+              child: selected
+                  ? const AxIcon(AxIcons.checkBold, size: 13, color: AxColors.surface)
+                  : const AxIcon(AxIcons.plus, size: 13, color: AxColors.surface),
             ),
-            child: service.selected
-                ? const AxIcon(AxIcons.checkBold, size: 13, color: AxColors.surface)
-                : const AxIcon(AxIcons.plus, size: 13, color: AxColors.surface),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

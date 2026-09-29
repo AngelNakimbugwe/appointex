@@ -124,22 +124,32 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     final businessName = typedName.isNotEmpty
         ? typedName
         : (firebaseUser.displayName ?? 'New provider');
-    await ref.read(userRepositoryProvider).createIfMissing(
-          uid: firebaseUser.uid,
-          role: AppUserRole.business,
-          displayName: businessName,
-          phoneNumber: firebaseUser.phoneNumber,
-          email: firebaseUser.email,
-          photoUrl: firebaseUser.photoUrl,
-        );
-    await ref.read(providerRepositoryProvider).createOrUpdate(
-          BusinessProviderProfile(
+    try {
+      await ref.read(userRepositoryProvider).createIfMissing(
             uid: firebaseUser.uid,
-            businessName: businessName,
-            category: _category,
-            phone: firebaseUser.phoneNumber ?? _phoneController.text.trim(),
-          ),
+            role: AppUserRole.business,
+            displayName: businessName,
+            phoneNumber: firebaseUser.phoneNumber,
+            email: firebaseUser.email,
+            photoUrl: firebaseUser.photoUrl,
+          );
+      await ref.read(providerRepositoryProvider).createOrUpdate(
+            BusinessProviderProfile(
+              uid: firebaseUser.uid,
+              businessName: businessName,
+              category: _category,
+              phone: firebaseUser.phoneNumber ?? _phoneController.text.trim(),
+            ),
+          );
+    } catch (err) {
+      _handledSignIn = false;
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not save your business profile: $err')),
         );
+      }
+      return;
+    }
     if (mounted) setState(() => _step = 2);
   }
 

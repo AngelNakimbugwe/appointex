@@ -121,11 +121,24 @@ final routerProvider = Provider<GoRouter>((ref) {
             ? AxRoutes.onboarding
             : null;
       }
-      final appUser = ref.read(currentAppUserProvider).value;
+      final profileState = ref.read(currentAppUserProvider);
+      final appUser = profileState.value;
       if (appUser == null) {
         // Profile doc still loading (or not created yet mid-onboarding) —
         // don't guess a destination; `redirect` re-runs the moment it
         // resolves, via the refreshListenable above.
+        //
+        // A Firestore failure puts the provider in an error state whose
+        // `.value` stays null forever — waiting would strand the user on the
+        // auth screen. In that case let guests browse the client routes
+        // (bounce business routes to onboarding) and let the profile
+        // listener's retry re-trigger this redirect once the doc loads.
+        if (profileState.hasError) {
+          if (atAuthRoute) return null;
+          return _bizRoutes.contains(state.matchedLocation)
+              ? AxRoutes.onboarding
+              : null;
+        }
         return null;
       }
       if (!atAuthRoute) return null;
@@ -164,7 +177,9 @@ final List<RouteBase> _routes = [
     ),
     GoRoute(
       path: AxRoutes.search,
-      builder: (context, state) => const SearchScreen(),
+      builder: (_, state) => SearchScreen(
+        initialCategory: state.uri.queryParameters['category'],
+      ),
     ),
     GoRoute(
       path: AxRoutes.provider,

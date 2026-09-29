@@ -15,8 +15,17 @@ import 'widgets/urgent_match_row.dart';
 /// Client_Urgent — urgent booking flow (`/home/urgent`). The user picks a
 /// category and a time window, sees which providers genuinely have an open
 /// slot, and drills into a provider to book.
-class UrgentScreen extends StatelessWidget {
+class UrgentScreen extends StatefulWidget {
   const UrgentScreen({super.key});
+
+  @override
+  State<UrgentScreen> createState() => _UrgentScreenState();
+}
+
+class _UrgentScreenState extends State<UrgentScreen> {
+  late int _selectedCategory =
+      kUrgentCategories.indexWhere((c) => c.selected);
+  late int _selectedWindow = kUrgentWindows.indexWhere((w) => w.selected);
 
   @override
   Widget build(BuildContext context) {
@@ -42,8 +51,16 @@ class UrgentScreen extends StatelessWidget {
                   spacing: AxSpace.s16,
                   children: [
                     const _Banner(),
-                    const _CategoryPicker(),
-                    const _WindowPicker(),
+                    _CategoryPicker(
+                      selectedIndex: _selectedCategory,
+                      onSelect: (index) =>
+                          setState(() => _selectedCategory = index),
+                    ),
+                    _WindowPicker(
+                      selectedIndex: _selectedWindow,
+                      onSelect: (index) =>
+                          setState(() => _selectedWindow = index),
+                    ),
                     const _RushNote(),
                     _MatchesSection(
                       onMatchTap: (id) => context.go('/provider/$id'),
@@ -173,10 +190,13 @@ class _Banner extends StatelessWidget {
 /// "What do you need?" — the `.catchip` row (Tier 3, artboard lines 37–65) in
 /// a horizontal scroller so the fixed 58px chips never wrap.
 class _CategoryPicker extends StatelessWidget {
-  const _CategoryPicker();
+  const _CategoryPicker({required this.selectedIndex, this.onSelect});
 
   /// `.catchip { width:58px }` — Client_Urgent.dc.html:14.
   static const double _catchipWidth = 58;
+
+  final int selectedIndex;
+  final ValueChanged<int>? onSelect;
 
   @override
   Widget build(BuildContext context) {
@@ -194,8 +214,12 @@ class _CategoryPicker extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             spacing: AxSpace.s12,
             children: [
-              for (final category in kUrgentCategories)
-                _Catchip(category: category),
+              for (var i = 0; i < kUrgentCategories.length; i++)
+                _Catchip(
+                  category: kUrgentCategories[i],
+                  selected: i == selectedIndex,
+                  onTap: onSelect == null ? null : () => onSelect!(i),
+                ),
             ],
           ),
         ),
@@ -205,45 +229,53 @@ class _CategoryPicker extends StatelessWidget {
 }
 
 class _Catchip extends StatelessWidget {
-  const _Catchip({required this.category});
+  const _Catchip({
+    required this.category,
+    required this.selected,
+    this.onTap,
+  });
 
   final UrgentCategory category;
+  final bool selected;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: _CategoryPicker._catchipWidth,
-      child: Column(
-        spacing: AxSpace.s5,
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: category.background,
-              borderRadius:
-                  const BorderRadius.all(Radius.circular(AxRadius.card)),
-            ),
-            child: Center(
-              child: AxIcon(
-                category.icon,
-                size: 18,
-                color: category.iconColor,
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: SizedBox(
+        width: _CategoryPicker._catchipWidth,
+        child: Column(
+          spacing: AxSpace.s5,
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: category.background,
+                borderRadius:
+                    const BorderRadius.all(Radius.circular(AxRadius.card)),
+              ),
+              child: Center(
+                child: AxIcon(
+                  category.icon,
+                  size: 18,
+                  color: category.iconColor,
+                ),
               ),
             ),
-          ),
-          Text(
-            category.label,
-            textAlign: TextAlign.center,
-            style: AxType.text(
-              AxType.nano,
-              weight: category.selected ? FontWeight.w700 : FontWeight.w600,
-              color: category.selected
-                  ? AxColors.urgentTo
-                  : AxColors.textBody,
+            Text(
+              category.label,
+              textAlign: TextAlign.center,
+              style: AxType.text(
+                AxType.nano,
+                weight: selected ? FontWeight.w700 : FontWeight.w600,
+                color: selected ? AxColors.urgentTo : AxColors.textBody,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -252,7 +284,10 @@ class _Catchip extends StatelessWidget {
 /// "How soon?" — artboard lines 67–83. The selected window carries a 2px
 /// `#E8433D` border on `#FFF3EF`; the others a 1px `#E0DBCF` border.
 class _WindowPicker extends StatelessWidget {
-  const _WindowPicker();
+  const _WindowPicker({required this.selectedIndex, this.onSelect});
+
+  final int selectedIndex;
+  final ValueChanged<int>? onSelect;
 
   @override
   Widget build(BuildContext context) {
@@ -267,7 +302,12 @@ class _WindowPicker extends StatelessWidget {
         Column(
           spacing: AxSpace.s8,
           children: [
-            for (final window in kUrgentWindows) _WindowOption(window: window),
+            for (var i = 0; i < kUrgentWindows.length; i++)
+              _WindowOption(
+                window: kUrgentWindows[i],
+                selected: i == selectedIndex,
+                onTap: onSelect == null ? null : () => onSelect!(i),
+              ),
           ],
         ),
       ],
@@ -276,53 +316,62 @@ class _WindowPicker extends StatelessWidget {
 }
 
 class _WindowOption extends StatelessWidget {
-  const _WindowOption({required this.window});
+  const _WindowOption({
+    required this.window,
+    required this.selected,
+    this.onTap,
+  });
 
   final UrgentWindow window;
+  final bool selected;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AxSpace.s14,
-        vertical: AxSpace.s11,
-      ),
-      decoration: BoxDecoration(
-        color: window.selected ? AxColors.urgentBgSoft : null,
-        borderRadius: const BorderRadius.all(Radius.circular(AxRadius.card)),
-        border: Border.all(
-          color:
-              window.selected ? AxColors.urgentTo : AxColors.borderStrong,
-          width: window.selected ? 2 : 1,
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AxSpace.s14,
+          vertical: AxSpace.s11,
         ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Flexible(
-            child: Text(
-              window.label,
-              style: AxType.text(
-                AxType.labelSm,
-                weight: window.selected ? FontWeight.w700 : FontWeight.w600,
-                color:
-                    window.selected ? AxColors.urgentTo : AxColors.textPrimary,
+        decoration: BoxDecoration(
+          color: selected ? AxColors.urgentBgSoft : null,
+          borderRadius: const BorderRadius.all(Radius.circular(AxRadius.card)),
+          border: Border.all(
+            color: selected ? AxColors.urgentTo : AxColors.borderStrong,
+            width: selected ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Flexible(
+              child: Text(
+                window.label,
+                style: AxType.text(
+                  AxType.labelSm,
+                  weight: selected ? FontWeight.w700 : FontWeight.w600,
+                  color:
+                      selected ? AxColors.urgentTo : AxColors.textPrimary,
+                ),
               ),
             ),
-          ),
-          Flexible(
-            child: Text(
-              window.fee,
-              textAlign: TextAlign.right,
-              style: AxType.text(
-                AxType.captionSm,
-                weight: window.selected ? FontWeight.w800 : FontWeight.w700,
-                color:
-                    window.selected ? AxColors.urgentTo : AxColors.textSubtle,
+            Flexible(
+              child: Text(
+                window.fee,
+                textAlign: TextAlign.right,
+                style: AxType.text(
+                  AxType.captionSm,
+                  weight: selected ? FontWeight.w800 : FontWeight.w700,
+                  color:
+                      selected ? AxColors.urgentTo : AxColors.textSubtle,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
